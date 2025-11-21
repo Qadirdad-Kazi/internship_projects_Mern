@@ -1,6 +1,6 @@
 # 🚀 Internship Projects MERN Stack Collection
 
-A comprehensive collection of full-stack MERN (MongoDB, Express.js, React, Node.js) applications designed for internship and learning purposes. This repository contains four distinct projects showcasing different aspects of modern web development.
+A comprehensive collection of full-stack MERN (MongoDB, Express.js, React, Node.js) applications designed for internship and learning purposes. This repository contains five distinct projects showcasing different aspects of modern web development, including payment integration, real-time collaboration, and automation systems.
 
 ## 📋 Table of Contents
 
@@ -19,6 +19,7 @@ A comprehensive collection of full-stack MERN (MongoDB, Express.js, React, Node.
 
 | Project | Description | Tech Stack | Status |
 |---------|-------------|------------|--------|
+| [**Payment Integration LMS**](#payment-integration-lms) | Learning Management System with PayPal/Stripe | React, Node.js, PayPal, Stripe, MongoDB | ✅ Complete |
 | [**Collaborative Project Space**](#collaborative-project-space) | Real-time project collaboration platform | React, Node.js, Socket.IO, MongoDB | ✅ Active |
 | [**Task Automation System**](#task-automation-system) | Intelligent workflow automation tool | React, Node.js, Express, MongoDB | ✅ Active |
 | [**Internship Management System**](#internship-management-system) | Complete internship program management | React, Node.js, Express, MongoDB | ✅ Active |
@@ -35,6 +36,8 @@ A comprehensive collection of full-stack MERN (MongoDB, Express.js, React, Node.
 - **Zustand** - Lightweight state management
 - **React Hook Form** - Form handling
 - **Axios** - HTTP client
+- **PayPal React SDK** - PayPal payment integration
+- **Stripe React SDK** - Stripe payment processing
 
 ### Backend
 - **Node.js** - JavaScript runtime
@@ -45,6 +48,9 @@ A comprehensive collection of full-stack MERN (MongoDB, Express.js, React, Node.
 - **Socket.IO** - Real-time communication
 - **Bcrypt** - Password hashing
 - **Multer** - File upload handling
+- **PayPal REST SDK** - PayPal payment processing
+- **Stripe SDK** - Stripe payment gateway
+- **Nodemailer** - Email service integration
 
 ### Development Tools
 - **ESLint** - Code linting
@@ -76,6 +82,8 @@ cd task-automation-system
 cd internship-management-system
 # OR
 cd resume-builder
+# OR
+cd payment-integration-lms
 ```
 
 ### Install & Run
@@ -92,6 +100,33 @@ npm run dev
 ```
 
 ## 📊 Project Descriptions
+
+### 💳 Payment Integration LMS
+**Learning Management System with integrated payment processing**
+
+**Features:**
+- 💳 PayPal & Stripe payment integration
+- 🎓 Course management system
+- 👥 User authentication & authorization
+- 📊 Subscription management
+- 📈 Payment analytics dashboard
+- 🔔 Email notifications
+- 📱 Responsive design
+- 🛡️ Secure payment processing
+
+**Tech Highlights:**
+- Dual payment gateway integration
+- JWT-based authentication
+- Role-based access control
+- Subscription lifecycle management
+- Payment webhook handling
+- Email verification system
+
+**Ports:**
+- Frontend: `http://localhost:5176`
+- Backend: `http://localhost:5005`
+
+---
 
 ### 🤝 Collaborative Project Space
 **Real-time project collaboration platform for teams**
@@ -230,12 +265,30 @@ PORT=5001
 MONGODB_URI=mongodb://localhost:27017/project_name
 JWT_SECRET=your-secret-key
 JWT_EXPIRE=30d
+
+# Payment Integration (Payment LMS Project)
+PAYPAL_CLIENT_ID=your-paypal-client-id
+PAYPAL_CLIENT_SECRET=your-paypal-client-secret
+STRIPE_PUBLISHABLE_KEY=your-stripe-publishable-key
+STRIPE_SECRET_KEY=your-stripe-secret-key
+STRIPE_WEBHOOK_SECRET=your-stripe-webhook-secret
+
+# Email Configuration
+EMAIL_FROM=your-email@example.com
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
 ```
 
 #### Frontend (.env)
 ```env
 VITE_API_URL=http://localhost:5001/api/v1
 VITE_SOCKET_URL=http://localhost:5001
+
+# Payment Integration (Payment LMS Project)
+VITE_PAYPAL_CLIENT_ID=your-paypal-client-id
+VITE_STRIPE_PUBLISHABLE_KEY=your-stripe-publishable-key
 ```
 
 ## 🔄 Development Workflow
@@ -243,6 +296,10 @@ VITE_SOCKET_URL=http://localhost:5001
 ### Project Structure
 ```
 internship_projects_Mern/
+├── payment-integration-lms/
+│   ├── frontend/          # React application with payment UI
+│   ├── backend/           # Node.js API with payment processing
+│   └── README.md
 ├── collaborative-project-space/
 │   ├── frontend/          # React application
 │   ├── backend/           # Node.js API
@@ -295,6 +352,14 @@ npm run lint       # Run ESLint
 - 📈 **Data Visualization** - Charts and graphs
 
 ### Project-Specific Features
+
+#### Payment Integration LMS
+- Dual payment gateway support (PayPal & Stripe)
+- Subscription billing and management
+- Secure payment processing with webhooks
+- Email automation for transactions
+- Course enrollment and access control
+- Payment analytics and reporting
 
 #### Collaborative Project Space
 - Real-time collaboration with Socket.IO
