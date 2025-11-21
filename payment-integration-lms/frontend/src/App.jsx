@@ -53,78 +53,78 @@ function App() {
     <PayPalScriptProvider options={paypalOptions}>
       <Elements stripe={stripePromise}>
         <Router>
-          <div className=\"min-h-screen bg-gray-50 flex flex-col\">
+          <div className="min-h-screen bg-gray-50 flex flex-col">
             <Navbar />
             
-            <main className=\"flex-1\">
+            <main className="flex-1">
               <Routes>
                 {/* Public Routes */}
-                <Route path=\"/\" element={<Home />} />
-                <Route path=\"/login\" element={<Login />} />
-                <Route path=\"/register\" element={<Register />} />
-                <Route path=\"/courses\" element={<Courses />} />
-                <Route path=\"/courses/:id\" element={<CourseDetail />} />
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/courses" element={<Courses />} />
+                <Route path="/courses/:id" element={<CourseDetail />} />
                 
                 {/* Protected Routes */}
-                <Route path=\"/dashboard\" element={
+                <Route path="/dashboard" element={
                   <ProtectedRoute>
                     <Dashboard />
                   </ProtectedRoute>
                 } />
                 
-                <Route path=\"/profile\" element={
+                <Route path="/profile" element={
                   <ProtectedRoute>
                     <Profile />
                   </ProtectedRoute>
                 } />
                 
-                <Route path=\"/courses/:id/learn\" element={
+                <Route path="/courses/:id/learn" element={
                   <ProtectedRoute>
                     <CourseLearning />
                   </ProtectedRoute>
                 } />
                 
-                <Route path=\"/payment/:type/:id?\" element={
+                <Route path="/payment/:type/:id?" element={
                   <ProtectedRoute>
                     <Payment />
                   </ProtectedRoute>
                 } />
                 
-                <Route path=\"/payment/success\" element={
+                <Route path="/payment/success" element={
                   <ProtectedRoute>
                     <PaymentSuccess />
                   </ProtectedRoute>
                 } />
                 
-                <Route path=\"/payment/cancel\" element={
+                <Route path="/payment/cancel" element={
                   <ProtectedRoute>
                     <PaymentCancel />
                   </ProtectedRoute>
                 } />
                 
-                <Route path=\"/subscription\" element={
+                <Route path="/subscription" element={
                   <ProtectedRoute>
                     <Subscription />
                   </ProtectedRoute>
                 } />
                 
                 {/* Instructor Routes */}
-                <Route path=\"/instructor/*\" element={
-                  <ProtectedRoute requiredRole=\"instructor\">
+                <Route path="/instructor/*" element={
+                  <ProtectedRoute requiredRole="instructor">
                     <InstructorDashboard />
                   </ProtectedRoute>
                 } />
                 
                 {/* Admin Routes */}
-                <Route path=\"/admin/*\" element={
+                <Route path="/admin/*" element={
                   <AdminRoute>
                     <AdminDashboard />
                   </AdminRoute>
                 } />
                 
                 {/* Redirect and 404 */}
-                <Route path=\"/404\" element={<NotFound />} />
-                <Route path=\"*\" element={<Navigate to=\"/404\" replace />} />
+                <Route path="/404" element={<NotFound />} />
+                <Route path="*" element={<Navigate to="/404" replace />} />
               </Routes>
             </main>
             
@@ -132,7 +132,7 @@ function App() {
             
             {/* Global Toast Container */}
             <Toaster 
-              position=\"top-right\"
+              position="top-right"
               toastOptions={{
                 duration: 4000,
                 style: {
