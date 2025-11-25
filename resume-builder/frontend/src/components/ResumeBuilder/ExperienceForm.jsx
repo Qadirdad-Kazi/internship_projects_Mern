@@ -9,11 +9,14 @@ const ExperienceForm = ({ data = [], onChange, errors = {} }) => {
   useEffect(() => {
     console.log('[EXPERIENCE DEBUG] ExperienceForm received data:', data)
     console.log('[EXPERIENCE DEBUG] Experience data length:', data.length)
+    console.log('[EXPERIENCE DEBUG] Raw data object:', JSON.stringify(data, null, 2))
     console.log('[EXPERIENCE DEBUG] Experience locations:', data.map((exp, i) => ({ 
       index: i, 
       jobTitle: exp.jobTitle, 
       company: exp.company,
       location: exp.location,
+      locationExists: 'location' in exp,
+      locationValue: exp.location,
       hasLocation: !!exp.location 
     })))
   }, [data])

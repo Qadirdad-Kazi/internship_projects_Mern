@@ -273,6 +273,7 @@ const ResumeBuilder = () => {
     console.log('[MAIN USEEFFECT] Loading data - id:', id, 'condition:', id && id !== 'new')
     console.log('[MAIN USEEFFECT] Current resume data before loading:', {
       experience: resumeData.experience?.length,
+      experienceLocations: resumeData.experience?.map((exp, i) => ({ index: i, location: exp.location })) || [],
       education: resumeData.education?.length,
       skills: resumeData.skills,
       projects: resumeData.projects?.length
@@ -394,7 +395,12 @@ const ResumeBuilder = () => {
       console.log('PersonalInfo field changed:', name, '=', value)
     }
     if (name === 'experience') {
-      console.log('Experience array changed, new length:', value.length)
+      console.log('[EXPERIENCE CHANGE DEBUG] Experience array changed, new length:', value.length)
+      console.log('[EXPERIENCE CHANGE DEBUG] Experience locations:', value.map((exp, i) => ({ 
+        index: i, 
+        location: exp.location, 
+        hasLocation: !!exp.location 
+      })))
     }
     if (name === 'education') {
       console.log('Education array changed, new length:', value.length)
