@@ -113,13 +113,16 @@ const ModernTemplate = ({ data, colors = { primary: '#2563eb', secondary: '#6474
                     <p className="text-gray-700 leading-relaxed mb-2">{project.description}</p>
                     {project.technologies && (
                       <div className="flex flex-wrap gap-2">
-                        {project.technologies.split(',').map((tech, i) => (
+                        {(Array.isArray(project.technologies) 
+                          ? project.technologies 
+                          : project.technologies.split(',')
+                        ).map((tech, i) => (
                           <span 
                             key={i} 
                             className="px-2 py-1 text-xs rounded"
                             style={{ backgroundColor: accentColor + '20', color: primaryColor }}
                           >
-                            {tech.trim()}
+                            {typeof tech === 'string' ? tech.trim() : tech}
                           </span>
                         ))}
                       </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { GraduationCap, Plus, Trash2, Award } from 'lucide-react'
 import { FormInput, FormTextarea, FormDatePicker, FormSelect } from '../Forms'
 
@@ -144,9 +144,18 @@ const EducationForm = ({ data = [], onChange, errors = {} }) => {
   }
 
   // Initialize with one empty education if no data
+  useEffect(() => {
+    if (data.length === 0) {
+      addEducation()
+    }
+  }, [data.length])
+
   if (data.length === 0) {
-    addEducation()
-    return null
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    )
   }
 
   return (

@@ -70,14 +70,22 @@ const Dashboard = () => {
               Here's what's happening with your resumes today.
             </p>
           </div>
-          <Link
-            to="/resume-builder"
-            className="btn-primary flex items-center"
-            disabled={!userStats?.canCreateResume}
-          >
-            <Plus className="h-5 w-5 mr-2" />
-            Create Resume
-          </Link>
+          <div className="flex items-center space-x-3">
+            <Link
+              to="/"
+              className="btn-secondary flex items-center"
+            >
+              Visit Home
+            </Link>
+            <Link
+              to="/resume-builder"
+              className="btn-primary flex items-center"
+              disabled={!userStats?.canCreateResume}
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Create Resume
+            </Link>
+          </div>
         </div>
       </div>
 

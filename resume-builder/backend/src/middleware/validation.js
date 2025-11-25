@@ -94,8 +94,8 @@ const schemas = {
     title: Joi.string().trim().min(1).max(100),
     template: Joi.string().valid('modern', 'classic', 'minimal', 'creative'),
     personalInfo: Joi.object({
-      fullName: Joi.string().trim().required(),
-      email: Joi.string().email().required(),
+      fullName: Joi.string().trim().allow(''),
+      email: Joi.string().email().allow(''),
       phone: Joi.string().trim(),
       address: Joi.object({
         street: Joi.string().trim(),
@@ -104,19 +104,19 @@ const schemas = {
         zipCode: Joi.string().trim(),
         country: Joi.string().trim()
       }),
-      website: Joi.string().uri(),
-      linkedin: Joi.string().uri(),
-      github: Joi.string().uri(),
-      portfolio: Joi.string().uri(),
+      website: Joi.string().uri().allow(''),
+      linkedin: Joi.string().uri().allow(''),
+      github: Joi.string().uri().allow(''),
+      portfolio: Joi.string().uri().allow(''),
       professionalSummary: Joi.string().max(500)
     }),
     experience: Joi.array().items(
       Joi.object({
-        jobTitle: Joi.string().trim().required(),
-        company: Joi.string().trim().required(),
+        jobTitle: Joi.string().trim().allow(''),
+        company: Joi.string().trim().allow(''),
         location: Joi.string().trim(),
-        startDate: Joi.date().iso().required(),
-        endDate: Joi.date().iso().greater(Joi.ref('startDate')),
+        startDate: Joi.date().iso().allow('', null),
+        endDate: Joi.date().iso().allow('', null),
         isCurrentJob: Joi.boolean(),
         description: Joi.string().max(1000),
         achievements: Joi.array().items(Joi.string().trim()),
@@ -125,8 +125,8 @@ const schemas = {
     ),
     education: Joi.array().items(
       Joi.object({
-        degree: Joi.string().trim().required(),
-        institution: Joi.string().trim().required(),
+        degree: Joi.string().trim().allow(''),
+        institution: Joi.string().trim().allow(''),
         location: Joi.string().trim(),
         startDate: Joi.date().iso(),
         endDate: Joi.date().iso().greater(Joi.ref('startDate')),
@@ -154,9 +154,12 @@ const schemas = {
     }),
     projects: Joi.array().items(
       Joi.object({
-        name: Joi.string().trim().required(),
+        name: Joi.string().trim().allow(''),
         description: Joi.string().max(500),
-        technologies: Joi.array().items(Joi.string().trim()),
+        technologies: Joi.alternatives().try(
+          Joi.array().items(Joi.string().trim()),
+          Joi.string().trim()
+        ),
         startDate: Joi.date().iso(),
         endDate: Joi.date().iso().greater(Joi.ref('startDate')),
         url: Joi.string().uri(),

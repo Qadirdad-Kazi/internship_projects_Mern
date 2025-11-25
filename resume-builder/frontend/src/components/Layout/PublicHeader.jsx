@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom'
-import { FileText, Menu, X } from 'lucide-react'
+import { FileText, Menu, X, User } from 'lucide-react'
 import { useState } from 'react'
+import { useAuthStore } from '../../stores/authStore'
 
 const PublicHeader = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { user, logout } = useAuthStore()
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
@@ -47,18 +49,38 @@ const PublicHeader = () => {
 
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link
-              to="/login"
-              className="text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              Sign In
-            </Link>
-            <Link
-              to="/register"
-              className="btn-primary"
-            >
-              Get Started
-            </Link>
+            {user ? (
+              <>
+                <Link
+                  to="/dashboard"
+                  className="text-gray-600 hover:text-gray-900 transition-colors flex items-center"
+                >
+                  <User className="h-4 w-4 mr-1" />
+                  Dashboard
+                </Link>
+                <Link
+                  to="/resume-builder"
+                  className="btn-primary"
+                >
+                  Create Resume
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/register"
+                  className="btn-primary"
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -107,20 +129,51 @@ const PublicHeader = () => {
                 Help
               </Link>
               <div className="pt-4 border-t border-gray-200 space-y-2">
-                <Link
-                  to="/login"
-                  className="block px-3 py-2 text-gray-600 hover:text-gray-900"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Sign In
-                </Link>
-                <Link
-                  to="/register"
-                  className="block px-3 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Get Started
-                </Link>
+                {user ? (
+                  <>
+                    <Link
+                      to="/dashboard"
+                      className="flex items-center px-3 py-2 text-gray-600 hover:text-gray-900"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      Dashboard
+                    </Link>
+                    <Link
+                      to="/resume-builder"
+                      className="block px-3 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Create Resume
+                    </Link>
+                    <button
+                      onClick={() => {
+                        logout()
+                        setIsMenuOpen(false)
+                      }}
+                      className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      className="block px-3 py-2 text-gray-600 hover:text-gray-900"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="block px-3 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Get Started
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>

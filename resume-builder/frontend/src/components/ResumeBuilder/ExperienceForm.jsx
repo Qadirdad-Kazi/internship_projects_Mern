@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Briefcase, Plus, Trash2, Calendar, MapPin } from 'lucide-react'
 import { FormInput, FormTextarea, FormDatePicker, FormSelect } from '../Forms'
 
@@ -124,9 +124,18 @@ const ExperienceForm = ({ data = [], onChange, errors = {} }) => {
   }
 
   // Initialize with one empty experience if no data
+  useEffect(() => {
+    if (data.length === 0) {
+      addExperience()
+    }
+  }, [data.length])
+
   if (data.length === 0) {
-    addExperience()
-    return null
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    )
   }
 
   return (

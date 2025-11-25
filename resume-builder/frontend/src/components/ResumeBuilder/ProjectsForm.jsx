@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { FolderOpen, Plus, Trash2, ExternalLink, Github, Calendar } from 'lucide-react'
 import { FormInput, FormTextarea, FormDatePicker } from '../Forms'
 
@@ -124,9 +124,18 @@ const ProjectsForm = ({ data = [], onChange, errors = {} }) => {
   }
 
   // Initialize with one empty project if no data
+  useEffect(() => {
+    if (data.length === 0) {
+      addProject()
+    }
+  }, [data.length])
+
   if (data.length === 0) {
-    addProject()
-    return null
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    )
   }
 
   return (

@@ -1,43 +1,26 @@
 import { useState } from 'react'
 import { Check, Eye, Palette } from 'lucide-react'
+import templates from '../Templates/index'
+import TemplatePreview from '../Templates/TemplatePreview'
 
 const TemplateSelection = ({ data = {}, onChange, errors = {} }) => {
-  const [selectedTemplate, setSelectedTemplate] = useState(data.template || 'modern')
-
-  const templates = [
-    {
-      id: 'modern',
-      name: 'Modern',
-      description: 'Clean, contemporary design with a focus on readability and visual hierarchy',
-      preview: '/templates/modern-preview.png',
-      features: ['Two-column layout', 'Color accents', 'Modern typography', 'ATS-friendly'],
-      bestFor: 'Tech, Design, Marketing'
-    },
-    {
-      id: 'classic',
-      name: 'Classic',
-      description: 'Traditional professional format that works well in conservative industries',
-      preview: '/templates/classic-preview.png',
-      features: ['Single column', 'Traditional layout', 'Professional fonts', 'Timeless design'],
-      bestFor: 'Law, Finance, Healthcare'
-    },
-    {
-      id: 'minimal',
-      name: 'Minimal',
-      description: 'Simple, clean design that lets your content speak for itself',
-      preview: '/templates/minimal-preview.png',
-      features: ['Minimal elements', 'Lots of whitespace', 'Focus on content', 'Easy to read'],
-      bestFor: 'Academia, Research, Consulting'
-    },
-    {
-      id: 'creative',
-      name: 'Creative',
-      description: 'Bold design with creative elements for standing out in creative fields',
-      preview: '/templates/creative-preview.png',
-      features: ['Unique layout', 'Visual elements', 'Color sections', 'Eye-catching'],
-      bestFor: 'Design, Art, Media, Advertising'
-    }
-  ]
+  const [selectedTemplate, setSelectedTemplate] = useState(data.template || 'modern-professional')
+  const [previewTemplate, setPreviewTemplate] = useState(null)
+  const [selectedColor, setSelectedColor] = useState(() => {
+    const colorOptions = [
+      { name: 'Blue', primary: '#2563eb', secondary: '#64748b' },
+      { name: 'Green', primary: '#059669', secondary: '#6b7280' },
+      { name: 'Purple', primary: '#7c3aed', secondary: '#6b7280' },
+      { name: 'Red', primary: '#dc2626', secondary: '#6b7280' },
+      { name: 'Orange', primary: '#ea580c', secondary: '#6b7280' },
+      { name: 'Teal', primary: '#0d9488', secondary: '#6b7280' },
+      { name: 'Pink', primary: '#db2777', secondary: '#6b7280' },
+      { name: 'Gray', primary: '#374151', secondary: '#6b7280' }
+    ]
+    return colorOptions.find(c => 
+      c.primary === (data.theme?.primaryColor || '#2563eb')
+    ) || colorOptions[0]
+  })
 
   const handleTemplateSelect = (templateId) => {
     setSelectedTemplate(templateId)
@@ -47,6 +30,15 @@ const TemplateSelection = ({ data = {}, onChange, errors = {} }) => {
         value: templateId
       }
     })
+  }
+
+  const handlePreviewTemplate = (template) => {
+    setPreviewTemplate(template.id)
+  }
+
+  const handleUseTemplate = (template) => {
+    handleTemplateSelect(template.id)
+    setPreviewTemplate(null)
   }
 
   const colorOptions = [
@@ -68,11 +60,8 @@ const TemplateSelection = ({ data = {}, onChange, errors = {} }) => {
     { value: 'Calibri', label: 'Calibri', preview: 'font-sans' }
   ]
 
-  const selectedColor = colorOptions.find(c => 
-    c.primary === (data.theme?.primaryColor || '#2563eb')
-  ) || colorOptions[0]
-
   const handleColorChange = (color) => {
+    setSelectedColor(color)
     onChange({
       target: {
         name: 'theme',
@@ -244,6 +233,14 @@ const TemplateSelection = ({ data = {}, onChange, errors = {} }) => {
           <li>• Ensure good contrast between text and background for readability</li>
         </ul>
       </div>
+      
+      {/* Template Preview Modal */}
+      <TemplatePreview
+        templateId={previewTemplate}
+        isOpen={!!previewTemplate}
+        onClose={() => setPreviewTemplate(null)}
+        onUseTemplate={handleUseTemplate}
+      />
     </div>
   )
 }

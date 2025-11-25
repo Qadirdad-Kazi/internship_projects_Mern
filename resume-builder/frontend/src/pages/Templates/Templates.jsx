@@ -1,107 +1,31 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Eye, Download, Star, Check, Filter, Search } from 'lucide-react'
+import templates from '../../components/Templates/index'
+import TemplatePreview from '../../components/Templates/TemplatePreview'
 
 const Templates = () => {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const navigate = useNavigate()
+  const [previewTemplate, setPreviewTemplate] = useState(null)
+
+  const handlePreviewTemplate = (template) => {
+    setPreviewTemplate(template.id)
+  }
+
+  const handleUseTemplate = (template) => {
+    // Store selected template in localStorage or state management
+    localStorage.setItem('selectedTemplate', JSON.stringify(template))
+    navigate('/resume-builder')
+  }
 
   const categories = [
-    { id: 'all', name: 'All Templates', count: 12 },
-    { id: 'modern', name: 'Modern', count: 4 },
-    { id: 'classic', name: 'Classic', count: 3 },
-    { id: 'minimal', name: 'Minimal', count: 3 },
+    { id: 'all', name: 'All Templates', count: 8 },
+    { id: 'modern', name: 'Modern', count: 2 },
+    { id: 'classic', name: 'Classic', count: 2 },
+    { id: 'minimal', name: 'Minimal', count: 2 },
     { id: 'creative', name: 'Creative', count: 2 }
-  ]
-
-  const templates = [
-    {
-      id: 1,
-      name: 'Modern Professional',
-      category: 'modern',
-      description: 'Clean and contemporary design perfect for tech and creative roles',
-      image: '/templates/modern-1.png',
-      features: ['Two-column layout', 'Color accents', 'Icon integration', 'ATS-friendly'],
-      isPremium: false,
-      rating: 4.9,
-      downloads: 15420
-    },
-    {
-      id: 2,
-      name: 'Executive Classic',
-      category: 'classic',
-      description: 'Traditional format ideal for senior positions and conservative industries',
-      image: '/templates/classic-1.png',
-      features: ['Single column', 'Professional fonts', 'Traditional layout', 'Print-optimized'],
-      isPremium: false,
-      rating: 4.8,
-      downloads: 12350
-    },
-    {
-      id: 3,
-      name: 'Minimal Clean',
-      category: 'minimal',
-      description: 'Simple and elegant design that focuses on content clarity',
-      image: '/templates/minimal-1.png',
-      features: ['Lots of whitespace', 'Clean typography', 'Subtle accents', 'Easy scanning'],
-      isPremium: false,
-      rating: 4.7,
-      downloads: 9870
-    },
-    {
-      id: 4,
-      name: 'Creative Portfolio',
-      category: 'creative',
-      description: 'Bold and unique design for designers and creative professionals',
-      image: '/templates/creative-1.png',
-      features: ['Visual elements', 'Custom graphics', 'Color blocks', 'Portfolio section'],
-      isPremium: true,
-      rating: 4.9,
-      downloads: 8960
-    },
-    {
-      id: 5,
-      name: 'Tech Innovator',
-      category: 'modern',
-      description: 'Cutting-edge design perfect for tech professionals and startups',
-      image: '/templates/modern-2.png',
-      features: ['Dark mode option', 'Tech-focused', 'Skill charts', 'Project showcase'],
-      isPremium: true,
-      rating: 4.8,
-      downloads: 7420
-    },
-    {
-      id: 6,
-      name: 'Corporate Elite',
-      category: 'classic',
-      description: 'Sophisticated design for corporate executives and business leaders',
-      image: '/templates/classic-2.png',
-      features: ['Executive summary', 'Achievement focus', 'Professional tone', 'Leadership emphasis'],
-      isPremium: true,
-      rating: 4.9,
-      downloads: 6890
-    },
-    {
-      id: 7,
-      name: 'Simple & Effective',
-      category: 'minimal',
-      description: 'Straightforward design that highlights your qualifications clearly',
-      image: '/templates/minimal-2.png',
-      features: ['No distractions', 'Content-first', 'Easy to read', 'Universal appeal'],
-      isPremium: false,
-      rating: 4.6,
-      downloads: 11250
-    },
-    {
-      id: 8,
-      name: 'Design Studio',
-      category: 'creative',
-      description: 'Artistic layout perfect for designers, artists, and creative agencies',
-      image: '/templates/creative-2.png',
-      features: ['Artistic flair', 'Portfolio grid', 'Brand colors', 'Visual hierarchy'],
-      isPremium: true,
-      rating: 4.8,
-      downloads: 5670
-    }
   ]
 
   const filteredTemplates = templates.filter(template => {
@@ -115,11 +39,18 @@ const Templates = () => {
     <div className="group bg-white rounded-xl shadow-soft overflow-hidden hover:shadow-lg transition-all duration-300">
       {/* Template Preview */}
       <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-          <div className="text-center">
-            <Eye className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">{template.name}</p>
-            <p className="text-xs text-gray-400 mt-1">Preview</p>
+        <div className="absolute inset-0 p-4">
+          <div className="w-full h-full bg-white rounded shadow-sm border border-gray-200 flex items-center justify-center">
+            <div className="text-center">
+              <div 
+                className="w-16 h-16 mx-auto mb-3 rounded-lg flex items-center justify-center"
+                style={{ backgroundColor: template.colors?.primary || '#2563eb' }}
+              >
+                <Eye className="h-8 w-8 text-white" />
+              </div>
+              <p className="text-sm font-medium text-gray-700">{template.name}</p>
+              <p className="text-xs text-gray-500 mt-1">Click to preview</p>
+            </div>
           </div>
         </div>
         
@@ -136,11 +67,17 @@ const Templates = () => {
         {/* Hover Actions */}
         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
           <div className="flex space-x-3">
-            <button className="btn-primary">
+            <button 
+              onClick={() => handlePreviewTemplate(template)}
+              className="btn-primary"
+            >
               <Eye className="h-4 w-4 mr-2" />
               Preview
             </button>
-            <button className="btn-secondary">
+            <button 
+              onClick={() => handleUseTemplate(template)}
+              className="btn-secondary"
+            >
               Use Template
             </button>
           </div>
@@ -184,7 +121,10 @@ const Templates = () => {
             <Download className="h-4 w-4 mr-1" />
             {template.downloads.toLocaleString()} downloads
           </div>
-          <button className="text-primary-600 hover:text-primary-800 font-medium">
+          <button 
+            onClick={() => handleUseTemplate(template)}
+            className="text-primary-600 hover:text-primary-800 font-medium"
+          >
             Use Template →
           </button>
         </div>
@@ -341,6 +281,14 @@ const Templates = () => {
           </p>
         </div>
       </div>
+      
+      {/* Template Preview Modal */}
+      <TemplatePreview
+        templateId={previewTemplate}
+        isOpen={!!previewTemplate}
+        onClose={() => setPreviewTemplate(null)}
+        onUseTemplate={handleUseTemplate}
+      />
     </div>
   )
 }

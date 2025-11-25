@@ -1,4 +1,4 @@
-import { Menu, Bell, Search, User, LogOut, Settings } from 'lucide-react'
+import { Menu, Bell, Search, User, LogOut, Settings, Home } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '../../stores/authStore'
@@ -44,8 +44,17 @@ const Header = ({ onMenuClick }) => {
               <Menu className="h-6 w-6" />
             </button>
             
+            {/* Home Link */}
+            <Link 
+              to="/"
+              className="hidden md:flex items-center ml-4 lg:ml-0 px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+            >
+              <Home className="h-4 w-4 mr-1" />
+              Home
+            </Link>
+            
             {/* Search bar - hidden on mobile */}
-            <div className="hidden md:block ml-4 lg:ml-0">
+            <div className="hidden md:block ml-4">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Search className="h-5 w-5 text-gray-400" />

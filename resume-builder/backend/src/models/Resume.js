@@ -17,6 +17,10 @@ const resumeSchema = new mongoose.Schema({
     enum: ['modern', 'classic', 'minimal', 'creative'],
     default: 'modern'
   },
+  isDraft: {
+    type: Boolean,
+    default: true
+  },
   personalInfo: {
     fullName: {
       type: String,

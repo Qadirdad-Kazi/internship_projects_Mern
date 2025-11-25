@@ -13,7 +13,7 @@ const PersonalInfoForm = ({ data = {}, onChange, errors = {} }) => {
       const addressField = name.split('.')[1]
       onChange({
         target: {
-          name: 'address',
+          name: `personalInfo.address`,
           value: {
             ...data.address,
             [addressField]: value
@@ -21,7 +21,13 @@ const PersonalInfoForm = ({ data = {}, onChange, errors = {} }) => {
         }
       })
     } else {
-      onChange(e)
+      // Prefix all field names with personalInfo.
+      onChange({
+        target: {
+          name: `personalInfo.${name}`,
+          value: value
+        }
+      })
     }
   }
 
@@ -34,7 +40,7 @@ const PersonalInfoForm = ({ data = {}, onChange, errors = {} }) => {
         setImagePreview(imageUrl)
         onChange({
           target: {
-            name: 'profilePicture',
+            name: 'personalInfo.profilePicture',
             value: imageUrl
           }
         })
@@ -47,7 +53,7 @@ const PersonalInfoForm = ({ data = {}, onChange, errors = {} }) => {
     setImagePreview(null)
     onChange({
       target: {
-        name: 'profilePicture',
+        name: 'personalInfo.profilePicture',
         value: ''
       }
     })

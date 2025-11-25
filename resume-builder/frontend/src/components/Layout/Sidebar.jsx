@@ -6,6 +6,7 @@ import {
   User, 
   Settings, 
   HelpCircle,
+  Home,
   X
 } from 'lucide-react'
 import { useAuthStore } from '../../stores/authStore'
@@ -16,6 +17,12 @@ const Sidebar = ({ isOpen, onClose }) => {
   const { user } = useAuthStore()
 
   const navigation = [
+    {
+      name: 'Home',
+      href: '/',
+      icon: Home,
+      description: 'Visit public homepage'
+    },
     {
       name: 'Dashboard',
       href: '/dashboard',

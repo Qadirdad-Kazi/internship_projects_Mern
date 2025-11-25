@@ -13,6 +13,7 @@ import {
 } from '../../components/ResumeBuilder'
 import { resumeAPI } from '../../services/api'
 import { useAuthStore } from '../../stores/authStore'
+import templates from '../../components/Templates/index'
 
 const ResumeBuilder = () => {
   const { id } = useParams()
@@ -21,9 +22,20 @@ const ResumeBuilder = () => {
   
   const [activeTab, setActiveTab] = useState('content')
   const [activeContentSection, setActiveContentSection] = useState('personal')
+  // Check for selected template from Templates page
+  const getInitialTemplate = () => {
+    const selectedTemplate = localStorage.getItem('selectedTemplate')
+    if (selectedTemplate) {
+      const template = JSON.parse(selectedTemplate)
+      localStorage.removeItem('selectedTemplate') // Clean up
+      return template.id
+    }
+    return 'modern-professional'
+  }
+
   const [resumeData, setResumeData] = useState({
     title: '',
-    template: 'modern',
+    template: getInitialTemplate(),
     personalInfo: {
       fullName: '',
       email: '',
@@ -184,30 +196,110 @@ const ResumeBuilder = () => {
     if (!isAutoSave) setIsSaving(true)
     
     try {
+      // Prepare data with draft status
+      const dataToSave = {
+        ...resumeData,
+        isDraft: true, // Mark as draft when saving
+        lastModified: new Date().toISOString()
+      }
+      
       let response
       if (id && id !== 'new') {
-        response = await resumeAPI.updateResume(id, resumeData)
+        response = await resumeAPI.updateResume(id, dataToSave)
       } else {
-        response = await resumeAPI.createResume(resumeData)
+        // For new resumes, first create with minimal data
+        const createData = {
+          title: resumeData.title || 'Untitled Resume',
+          template: resumeData.template || 'modern'
+        }
+        
+        response = await resumeAPI.createResume(createData)
+        const newResumeId = response.data.resume._id
+        
         // Update URL to reflect the new resume ID
-        navigate(`/dashboard/resume-builder/${response.data._id}`, { replace: true })
+        navigate(`/dashboard/resume-builder/${newResumeId}`, { replace: true })
+        
+        // Then update with full data as draft
+        response = await resumeAPI.updateResume(newResumeId, dataToSave)
       }
       
       setHasUnsavedChanges(false)
       setLastSaved(new Date())
       
       if (!isAutoSave) {
-        // Show success notification
-        console.log('Resume saved successfully')
+        // Show success notification for draft save
+        console.log('Resume draft saved successfully')
+        alert('Resume saved as draft! You can continue editing anytime.')
       }
     } catch (error) {
       console.error('Error saving resume:', error)
+      console.error('Error details:', error.response?.data)
+      
       // Handle validation errors
       if (error.response?.data?.errors) {
         setErrors(error.response.data.errors)
       }
+      
+      // Show user-friendly error message
+      if (!isAutoSave) {
+        alert('Failed to save resume. Please check the form for errors and try again.')
+      }
     } finally {
       if (!isAutoSave) setIsSaving(false)
+    }
+  }
+
+  const publishResume = async () => {
+    setIsSaving(true)
+    
+    try {
+      // Validate required fields
+      if (!resumeData.personalInfo?.fullName || !resumeData.personalInfo?.email) {
+        alert('Please fill in at least your name and email before publishing.')
+        return
+      }
+
+      // Prepare data for publishing (mark as not draft)
+      const publishData = {
+        ...resumeData,
+        isDraft: false,
+        publishedAt: new Date().toISOString()
+      }
+      
+      let response
+      if (id && id !== 'new') {
+        response = await resumeAPI.updateResume(id, publishData)
+      } else {
+        // Create new resume if it doesn't exist
+        const createData = {
+          title: resumeData.title || 'My Resume',
+          template: resumeData.template || 'modern'
+        }
+        
+        response = await resumeAPI.createResume(createData)
+        const newResumeId = response.data.resume._id
+        
+        navigate(`/dashboard/resume-builder/${newResumeId}`, { replace: true })
+        response = await resumeAPI.updateResume(newResumeId, publishData)
+      }
+      
+      setHasUnsavedChanges(false)
+      setLastSaved(new Date())
+      
+      alert('Resume published successfully! It\'s now ready to share and download.')
+      console.log('Resume published successfully')
+      
+    } catch (error) {
+      console.error('Error publishing resume:', error)
+      console.error('Error details:', error.response?.data)
+      
+      if (error.response?.data?.errors) {
+        setErrors(error.response.data.errors)
+      }
+      
+      alert('Failed to publish resume. Please check the form for errors and try again.')
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -309,7 +401,7 @@ const ResumeBuilder = () => {
               {lastSaved && (
                 <div className="flex items-center text-sm text-gray-500">
                   <CheckCircle className="h-4 w-4 mr-1 text-green-500" />
-                  Saved {lastSaved.toLocaleTimeString()}
+                  Draft saved {lastSaved.toLocaleTimeString()}
                 </div>
               )}
               
@@ -333,11 +425,21 @@ const ResumeBuilder = () => {
             
             <button 
               onClick={() => saveResume()}
-              disabled={isSaving || !hasUnsavedChanges}
-              className="btn-primary flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isSaving || (!hasUnsavedChanges && id !== 'new')}
+              className="btn-secondary flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="h-4 w-4 mr-2" />
-              {isSaving ? 'Saving...' : 'Save Resume'}
+              {isSaving ? 'Saving Draft...' : (id === 'new' ? 'Save Draft' : 'Save Draft')}
+            </button>
+            
+            <button 
+              onClick={() => publishResume()}
+              disabled={isSaving || !resumeData.personalInfo?.fullName || !resumeData.personalInfo?.email}
+              className="btn-primary flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+              title={(!resumeData.personalInfo?.fullName || !resumeData.personalInfo?.email) ? 'Please fill in at least your name and email to publish' : ''}
+            >
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Publish Resume
             </button>
           </div>
         </div>
