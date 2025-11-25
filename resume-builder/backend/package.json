@@ -7,11 +7,17 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "setup": "node setup.js",
+    "build": "echo 'No build step required for Node.js'",
+    "vercel-build": "echo 'Building for Vercel deployment'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": ["resume", "builder", "pdf", "mern", "api"],
   "author": "Developer",
   "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "dependencies": {
     "express": "^4.18.2",
     "mongoose": "^7.5.0",

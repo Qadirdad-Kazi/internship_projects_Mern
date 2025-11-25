@@ -48,13 +48,31 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static('uploads'));
 app.use('/temp', express.static('temp'));
 
+// Root endpoint for Vercel
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Resume Builder API',
+    version: '1.0.0',
+    documentation: '/health',
+    endpoints: {
+      health: '/health',
+      auth: '/api/v1/auth',
+      resumes: '/api/v1/resumes',
+      pdf: '/api/v1/pdf'
+    }
+  });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'success',
     message: 'Resume Builder API is running',
     timestamp: new Date().toISOString(),
-    version: process.env.npm_package_version || '1.0.0'
+    version: process.env.npm_package_version || '1.0.0',
+    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+    uptime: process.uptime(),
+    memory: process.memoryUsage()
   });
 });
 
@@ -140,6 +158,13 @@ const PORT = process.env.PORT || 5002;
 const startServer = async () => {
   await connectDB();
   
+  // For Vercel deployment, just return the app
+  if (process.env.NODE_ENV === 'production' && process.env.VERCEL) {
+    console.log('🚀 Resume Builder Server configured for Vercel');
+    return app;
+  }
+  
+  // Start server normally for local development
   app.listen(PORT, () => {
     console.log(`\n🚀 Resume Builder Server running on port ${PORT}`);
     console.log(`📖 API Documentation: http://localhost:${PORT}/health`);
@@ -148,6 +173,17 @@ const startServer = async () => {
   });
 };
 
-startServer().catch(console.error);
-
-module.exports = app;
+// For Vercel deployment
+if (process.env.NODE_ENV === 'production' && process.env.VERCEL) {
+  // Initialize database connection for serverless
+  connectDB().then(() => {
+    console.log('🚀 Database connected for Vercel deployment');
+  }).catch(console.error);
+  
+  // Export the Express app for Vercel serverless functions
+  module.exports = app;
+} else {
+  // Start the server normally for local development
+  startServer().catch(console.error);
+  module.exports = app;
+}

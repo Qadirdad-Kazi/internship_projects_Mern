@@ -1,0 +1,10 @@
+node_modules
+.env
+.env.local
+.env.development
+*.log
+temp/
+uploads/
+.DS_Store
+*.md
+README.md
