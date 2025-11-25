@@ -228,10 +228,20 @@ const createPDFBuffer = async (resume) => {
           generateModernTemplate(doc, resume);
       }
       
+      console.log('[PDF DEBUG] Ending PDF document...');
       doc.end();
+      console.log('[PDF DEBUG] PDF document ended successfully');
       
     } catch (error) {
-      reject(error);
+      console.error('[PDF DEBUG] Error in createPDFBuffer, trying fallback template:', error);
+      try {
+        // Fallback to basic template
+        generateBasicTemplate(doc, resume);
+        doc.end();
+      } catch (fallbackError) {
+        console.error('[PDF DEBUG] Fallback template also failed:', fallbackError);
+        reject(fallbackError);
+      }
     }
   });
 };
@@ -248,32 +258,51 @@ const generateModernTemplate = (doc, resume) => {
     const theme = settings.theme || {};
     const primaryColor = theme.primaryColor || '#2563eb';
     const fontSize = theme.fontSize || 12;
+    
+    console.log('[PDF DEBUG] Theme values:', { primaryColor, fontSize });
+    console.log('[PDF DEBUG] Personal info values:', personalInfo.fullName, personalInfo.email);
   
   let yPosition = 70;
   
-  // Header Section with colored background
-  doc.rect(0, 0, doc.page.width, 120)
-     .fill(primaryColor);
-  
-  // Personal Information
-  doc.fillColor('white')
-     .fontSize(24)
-     .font('Helvetica-Bold')
-     .text(personalInfo.fullName, 50, 30);
-  
-  doc.fontSize(14)
-     .font('Helvetica')
-     .text(personalInfo.email, 50, 60);
-  
-  if (personalInfo.phone) {
-    doc.text(` | ${personalInfo.phone}`, { continued: true });
+  try {
+    console.log('[PDF DEBUG] Drawing header section...');
+    // Header Section with colored background
+    doc.rect(0, 0, doc.page.width, 120)
+       .fill(primaryColor);
+    
+    console.log('[PDF DEBUG] Adding personal information...');
+    // Personal Information
+    doc.fillColor('white')
+       .fontSize(24)
+       .font('Helvetica-Bold')
+       .text(personalInfo.fullName || 'Name Not Provided', 50, 30);
+    
+    console.log('[PDF DEBUG] Header section completed');
+  } catch (headerError) {
+    console.error('[PDF DEBUG] Error in header section:', headerError);
+    throw new Error(`Header generation failed: ${headerError.message}`);
   }
   
-  if (personalInfo.website) {
-    doc.text(` | ${personalInfo.website}`, { continued: true });
+  try {
+    console.log('[PDF DEBUG] Adding contact information...');
+    doc.fontSize(14)
+       .font('Helvetica')
+       .text(personalInfo.email || 'email@example.com', 50, 60);
+    
+    if (personalInfo.phone) {
+      doc.text(` | ${personalInfo.phone}`, { continued: true });
+    }
+    
+    if (personalInfo.website) {
+      doc.text(` | ${personalInfo.website}`, { continued: true });
+    }
+    
+    yPosition = 140;
+    console.log('[PDF DEBUG] Contact information completed');
+  } catch (contactError) {
+    console.error('[PDF DEBUG] Error in contact section:', contactError);
+    throw new Error(`Contact generation failed: ${contactError.message}`);
   }
-  
-  yPosition = 140;
   
   // Professional Summary
   if (personalInfo.professionalSummary && resume.settings.sections.showProfessionalSummary) {
@@ -703,6 +732,51 @@ const addCreativeSection = (doc, title, content, yPosition, xStart, color, fontS
      .text(content, xStart, yPosition, { width: doc.page.width - xStart - 50 });
   
   return yPosition + doc.heightOfString(content, { width: doc.page.width - xStart - 50 }) + 20;
+};
+
+// Basic fallback template that always works
+const generateBasicTemplate = (doc, resume) => {
+  console.log('[PDF DEBUG] Using basic fallback template');
+  
+  try {
+    const personalInfo = resume.personalInfo || {};
+    
+    // Simple header
+    doc.fontSize(20)
+       .font('Helvetica-Bold')
+       .fillColor('black')
+       .text(personalInfo.fullName || 'Resume', 50, 50);
+    
+    // Contact info
+    let yPos = 80;
+    doc.fontSize(12)
+       .font('Helvetica');
+    
+    if (personalInfo.email) {
+      doc.text(`Email: ${personalInfo.email}`, 50, yPos);
+      yPos += 20;
+    }
+    
+    if (personalInfo.phone) {
+      doc.text(`Phone: ${personalInfo.phone}`, 50, yPos);
+      yPos += 20;
+    }
+    
+    // Simple content placeholder
+    yPos += 20;
+    doc.text('Resume content will appear here.', 50, yPos);
+    doc.text('This is a basic template generated due to formatting issues.', 50, yPos + 20);
+    
+    console.log('[PDF DEBUG] Basic template generated successfully');
+  } catch (basicError) {
+    console.error('[PDF DEBUG] Even basic template failed:', basicError);
+    // Generate absolute minimal PDF
+    doc.fontSize(12)
+       .font('Helvetica')
+       .fillColor('black')
+       .text('Resume PDF Generation Error', 50, 50)
+       .text('Please contact support for assistance.', 50, 70);
+  }
 };
 
 // Sanitize resume data for PDF generation
