@@ -3,30 +3,30 @@ import { useAuthStore } from './stores/authStore'
 import { useEffect } from 'react'
 
 // Layout Components
-import Layout from './components/Layout/Layout'
-import PublicLayout from './components/Layout/PublicLayout'
+import Layout from './components/Layout/Layout.jsx'
+import PublicLayout from './components/Layout/PublicLayout.jsx'
 
 // Auth Pages
-import Login from './pages/Auth/Login'
-import Register from './pages/Auth/Register'
+import Login from './pages/Auth/Login.jsx'
+import Register from './pages/Auth/Register.jsx'
 
 // Main Pages
-import Dashboard from './pages/Dashboard/Dashboard'
-import ResumeBuilder from './pages/ResumeBuilder/ResumeBuilder'
-import ResumeList from './pages/Resume/ResumeList'
-import ResumeView from './pages/Resume/ResumeView'
-import Profile from './pages/Profile/Profile'
+import Dashboard from './pages/Dashboard/Dashboard.jsx'
+import ResumeBuilder from './pages/ResumeBuilder/ResumeBuilder.jsx'
+import ResumeList from './pages/Resume/ResumeList.jsx'
+import ResumeView from './pages/Resume/ResumeView.jsx'
+import Profile from './pages/Profile/Profile.jsx'
 
 // Public Pages
-import Landing from './pages/Public/Landing'
-import PublicResume from './pages/Public/PublicResume'
-import Features from './pages/Features/Features'
-import Templates from './pages/Templates/Templates'
-import Pricing from './pages/Pricing/Pricing'
-import Help from './pages/Help/Help'
+import Landing from './pages/Public/Landing.jsx'
+import PublicResume from './pages/Public/PublicResume.jsx'
+import Features from './pages/Features/Features.jsx'
+import Templates from './pages/Templates/Templates.jsx'
+import Pricing from './pages/Pricing/Pricing.jsx'
+import Help from './pages/Help/Help.jsx'
 
 // Error Pages
-import NotFound from './pages/Error/NotFound'
+import NotFound from './pages/Error/NotFound.jsx'
 
 // Protected Route Component
 import ProtectedRoute from './components/Auth/ProtectedRoute'
