@@ -22,6 +22,62 @@ const ResumeBuilder = () => {
   const location = useLocation()
   const { user } = useAuthStore()
   
+  // Clean resume data for backend validation
+  const cleanResumeData = (data) => {
+    const cleaned = { ...data }
+    
+    // Clean personalInfo
+    if (cleaned.personalInfo) {
+      // Remove empty email if not valid
+      if (cleaned.personalInfo.email && !cleaned.personalInfo.email.includes('@')) {
+        cleaned.personalInfo.email = ''
+      }
+      
+      // Clean URLs - remove if not valid
+      const urlFields = ['website', 'linkedin', 'github', 'portfolio']
+      urlFields.forEach(field => {
+        if (cleaned.personalInfo[field] && !cleaned.personalInfo[field].startsWith('http')) {
+          cleaned.personalInfo[field] = cleaned.personalInfo[field] ? `https://${cleaned.personalInfo[field]}` : ''
+        }
+      })
+    }
+    
+    // Clean experience dates
+    if (cleaned.experience) {
+      cleaned.experience = cleaned.experience.map(exp => ({
+        ...exp,
+        startDate: exp.startDate ? new Date(exp.startDate).toISOString() : null,
+        endDate: exp.endDate && !exp.isCurrentJob ? new Date(exp.endDate).toISOString() : null
+      }))
+    }
+    
+    // Clean education dates  
+    if (cleaned.education) {
+      cleaned.education = cleaned.education.map(edu => ({
+        ...edu,
+        startDate: edu.startDate ? new Date(edu.startDate).toISOString() : null,
+        endDate: edu.endDate && !edu.isCurrentlyEnrolled ? new Date(edu.endDate).toISOString() : null
+      }))
+    }
+    
+    // Clean projects
+    if (cleaned.projects) {
+      cleaned.projects = cleaned.projects.map(project => ({
+        ...project,
+        startDate: project.startDate ? new Date(project.startDate).toISOString() : null,
+        endDate: project.endDate && !project.isOngoing ? new Date(project.endDate).toISOString() : null,
+        // Ensure technologies is array
+        technologies: Array.isArray(project.technologies) ? project.technologies : 
+          (project.technologies ? project.technologies.split(',').map(t => t.trim()) : [])
+      }))
+    }
+    
+    // Remove fields that cause validation issues
+    delete cleaned.lastModified
+    
+    return cleaned
+  }
+  
   const [activeTab, setActiveTab] = useState('content')
   const [activeContentSection, setActiveContentSection] = useState('personal')
   
@@ -251,12 +307,11 @@ const ResumeBuilder = () => {
     if (!isAutoSave) setIsSaving(true)
     
     try {
-      // Prepare data with draft status
-      const dataToSave = {
+      // Clean and prepare data with draft status
+      const dataToSave = cleanResumeData({
         ...resumeData,
-        isDraft: true, // Mark as draft when saving
-        lastModified: new Date().toISOString()
-      }
+        isDraft: true // Mark as draft when saving
+      })
       
       let response
       if (id && id !== 'new') {
@@ -312,6 +367,14 @@ const ResumeBuilder = () => {
       // Handle validation errors
       if (error.response?.data?.errors) {
         setErrors(error.response.data.errors)
+        
+        // Show specific validation errors
+        if (!isAutoSave && error.response?.status === 400) {
+          const errorMessages = error.response.data.errors.map(err => `${err.field}: ${err.message}`).join('\n')
+          console.error('Validation errors:', errorMessages)
+          alert(`Validation errors found:\n${errorMessages}`)
+          return
+        }
       }
       
       // Show user-friendly error message
@@ -345,12 +408,12 @@ const ResumeBuilder = () => {
         return
       }
 
-      // Prepare data for publishing (mark as not draft)
-      const publishData = {
+      // Clean and prepare data for publishing (mark as not draft)
+      const publishData = cleanResumeData({
         ...resumeData,
         isDraft: false,
         publishedAt: new Date().toISOString()
-      }
+      })
       
       let response
       if (id && id !== 'new') {
