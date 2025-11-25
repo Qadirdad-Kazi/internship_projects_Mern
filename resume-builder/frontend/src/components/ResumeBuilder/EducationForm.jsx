@@ -70,6 +70,7 @@ const EducationForm = ({ data = [], onChange, errors = {} }) => {
   }
 
   const updateEducation = (index, field, value) => {
+    console.log('[EDUCATION DEBUG] Updating education:', { index, field, value })
     const newData = [...data]
     
     if (field === 'isCurrentlyEnrolled' && value) {
@@ -85,6 +86,7 @@ const EducationForm = ({ data = [], onChange, errors = {} }) => {
       newData[index] = { ...newData[index], [field]: value }
     }
     
+    console.log('[EDUCATION DEBUG] Updated education data:', newData)
     onChange({
       target: {
         name: 'education',

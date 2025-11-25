@@ -101,6 +101,11 @@ const ResumeBuilder = () => {
     
     // Clean education arrays
     if (cleaned.education) {
+      console.log('[DEBUGGING] Cleaning Education Data:', {
+        originalEducation: cleaned.education,
+        educationCount: cleaned.education.length
+      })
+      
       cleaned.education = cleaned.education.map(edu => ({
         ...edu,
         startDate: edu.startDate ? new Date(edu.startDate).toISOString() : null,
@@ -108,6 +113,11 @@ const ResumeBuilder = () => {
         honors: edu.honors ? edu.honors.filter(honor => honor && honor.trim()) : [],
         relevantCoursework: edu.relevantCoursework ? edu.relevantCoursework.filter(course => course && course.trim()) : []
       }))
+      
+      console.log('[DEBUGGING] Cleaned Education Data:', {
+        cleanedEducation: cleaned.education,
+        cleanedEducationCount: cleaned.education.length
+      })
     }
     
     // Remove fields that cause validation issues
@@ -224,12 +234,19 @@ const ResumeBuilder = () => {
 
   // Load existing resume data
   useEffect(() => {
-    console.log('useEffect for loading data - id:', id, 'condition:', id && id !== 'new')
+    console.log('[MAIN USEEFFECT] Loading data - id:', id, 'condition:', id && id !== 'new')
+    console.log('[MAIN USEEFFECT] Current resume data before loading:', {
+      experience: resumeData.experience?.length,
+      education: resumeData.education?.length,
+      skills: resumeData.skills,
+      projects: resumeData.projects?.length
+    })
+    
     if (id && id !== 'new') {
-      console.log('Calling loadResumeData for id:', id)
+      console.log('[MAIN USEEFFECT] Calling loadResumeData for id:', id)
       loadResumeData()
     } else if (user) {
-      console.log('Not loading existing data - creating new resume or pre-populating user data')
+      console.log('[MAIN USEEFFECT] Not loading existing data - creating new resume or pre-populating user data')
       // Pre-populate with user data for new resume
       setResumeData(prev => ({
         ...prev,
@@ -471,11 +488,53 @@ const ResumeBuilder = () => {
         console.log('Updating resume with full data:', dataToSave)
         response = await resumeAPI.updateResume(newResumeId, dataToSave)
         
-        // Force reload the data after navigation
-        setTimeout(() => {
-          console.log('Force reloading data after navigation')
-          loadResumeData()
-        }, 100)
+        // Force reload the data after navigation using the new ID
+        setTimeout(async () => {
+          console.log('Force reloading data after navigation with new ID:', newResumeId)
+          try {
+            const reloadResponse = await resumeAPI.getResumeById(newResumeId)
+            const reloadedData = reloadResponse.data?.data?.resume || reloadResponse.data
+            
+            console.log('Reloaded data after save:', reloadedData)
+            console.log('Reloaded experience:', reloadedData.experience)
+            console.log('Reloaded education:', reloadedData.education)
+            console.log('Reloaded skills:', reloadedData.skills)
+            console.log('Reloaded projects:', reloadedData.projects)
+            
+            // Ensure proper structure with fallbacks
+            const structuredData = {
+              ...reloadedData,
+              personalInfo: {
+                fullName: '',
+                email: '',
+                phone: '',
+                address: { street: '', city: '', state: '', zipCode: '', country: '' },
+                website: '',
+                linkedin: '',
+                github: '',
+                portfolio: '',
+                profilePicture: '',
+                professionalSummary: '',
+                ...reloadedData.personalInfo
+              },
+              experience: reloadedData.experience || [],
+              education: reloadedData.education || [],
+              skills: reloadedData.skills || { technical: [], soft: [], languages: [] },
+              projects: reloadedData.projects || [],
+              certifications: reloadedData.certifications || [],
+              achievements: reloadedData.achievements || [],
+              volunteerWork: reloadedData.volunteerWork || [],
+              references: reloadedData.references || [],
+              customSections: reloadedData.customSections || []
+            }
+            
+            console.log('Setting reloaded structured data:', structuredData)
+            setResumeData(structuredData)
+            setLastSaved(new Date())
+          } catch (reloadError) {
+            console.error('Error reloading data after save:', reloadError)
+          }
+        }, 200)
       }
       
       setHasUnsavedChanges(false)
