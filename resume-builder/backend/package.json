@@ -2,7 +2,7 @@
   "name": "resume-builder-backend",
   "version": "1.0.0",
   "description": "Backend API for Resume Builder with PDF Export",
-  "main": "src/server.js",
+  "main": "index.js",
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",

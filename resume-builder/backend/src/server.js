@@ -173,17 +173,13 @@ const startServer = async () => {
   });
 };
 
-// For Vercel deployment
-if (process.env.NODE_ENV === 'production' && process.env.VERCEL) {
-  // Initialize database connection for serverless
-  connectDB().then(() => {
-    console.log('🚀 Database connected for Vercel deployment');
-  }).catch(console.error);
-  
-  // Export the Express app for Vercel serverless functions
-  module.exports = app;
-} else {
-  // Start the server normally for local development
+// Initialize database connection
+connectDB().catch(console.error);
+
+// Export the Express app for Vercel serverless functions
+module.exports = app;
+
+// Start the server for local development only
+if (require.main === module) {
   startServer().catch(console.error);
-  module.exports = app;
 }
