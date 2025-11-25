@@ -427,11 +427,13 @@ const ResumeBuilder = () => {
   }
 
   const renderContentForm = () => {
+    if (!resumeData) return null
+    
     switch (activeContentSection) {
       case 'personal':
         return (
           <PersonalInfoForm 
-            data={resumeData.personalInfo}
+            data={resumeData.personalInfo || {}}
             onChange={handleDataChange}
             errors={errors}
           />
@@ -439,7 +441,7 @@ const ResumeBuilder = () => {
       case 'experience':
         return (
           <ExperienceForm 
-            data={resumeData.experience}
+            data={resumeData.experience || []}
             onChange={handleDataChange}
             errors={errors}
           />
@@ -447,7 +449,7 @@ const ResumeBuilder = () => {
       case 'education':
         return (
           <EducationForm 
-            data={resumeData.education}
+            data={resumeData.education || []}
             onChange={handleDataChange}
             errors={errors}
           />
@@ -455,7 +457,7 @@ const ResumeBuilder = () => {
       case 'skills':
         return (
           <SkillsForm 
-            data={resumeData.skills}
+            data={resumeData.skills || { technical: [], soft: [], languages: [] }}
             onChange={handleDataChange}
             errors={errors}
           />
@@ -463,7 +465,7 @@ const ResumeBuilder = () => {
       case 'projects':
         return (
           <ProjectsForm 
-            data={resumeData.projects}
+            data={resumeData.projects || []}
             onChange={handleDataChange}
             errors={errors}
           />
