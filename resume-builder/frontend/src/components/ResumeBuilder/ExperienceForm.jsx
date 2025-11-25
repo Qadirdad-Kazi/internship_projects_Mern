@@ -4,6 +4,12 @@ import { FormInput, FormTextarea, FormDatePicker, FormSelect } from '../Forms'
 
 const ExperienceForm = ({ data = [], onChange, errors = {} }) => {
   const [expandedItems, setExpandedItems] = useState(new Set([0]))
+  
+  // Debug logging
+  useEffect(() => {
+    console.log('ExperienceForm received data:', data)
+    console.log('Data length:', data.length)
+  }, [data])
 
   const addExperience = () => {
     const newExperience = {

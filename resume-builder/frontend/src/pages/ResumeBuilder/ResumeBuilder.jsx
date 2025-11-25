@@ -33,22 +33,37 @@ const ResumeBuilder = () => {
         cleaned.personalInfo.email = ''
       }
       
-      // Clean URLs - remove if not valid
+      // Clean URLs - add https if missing but preserve the value
       const urlFields = ['website', 'linkedin', 'github', 'portfolio']
       urlFields.forEach(field => {
-        if (cleaned.personalInfo[field] && !cleaned.personalInfo[field].startsWith('http')) {
-          cleaned.personalInfo[field] = cleaned.personalInfo[field] ? `https://${cleaned.personalInfo[field]}` : ''
+        if (cleaned.personalInfo[field]) {
+          const value = cleaned.personalInfo[field].trim()
+          if (value && !value.startsWith('http://') && !value.startsWith('https://')) {
+            cleaned.personalInfo[field] = `https://${value}`
+          }
         }
+      })
+      
+      console.log('Cleaned personalInfo URLs:', {
+        website: cleaned.personalInfo.website,
+        linkedin: cleaned.personalInfo.linkedin,
+        github: cleaned.personalInfo.github,
+        portfolio: cleaned.personalInfo.portfolio
       })
     }
     
-    // Clean experience dates
+    // Clean experience dates and arrays (preserve structure)
     if (cleaned.experience) {
       cleaned.experience = cleaned.experience.map(exp => ({
         ...exp,
         startDate: exp.startDate ? new Date(exp.startDate).toISOString() : null,
-        endDate: exp.endDate && !exp.isCurrentJob ? new Date(exp.endDate).toISOString() : null
+        endDate: exp.endDate && !exp.isCurrentJob ? new Date(exp.endDate).toISOString() : null,
+        achievements: exp.achievements ? exp.achievements.filter(item => item && item.trim()) : [],
+        technologies: exp.technologies ? exp.technologies.filter(item => item && item.trim()) : []
       }))
+    } else {
+      // Preserve empty array structure
+      cleaned.experience = []
     }
     
     // Clean education dates  
@@ -66,9 +81,32 @@ const ResumeBuilder = () => {
         ...project,
         startDate: project.startDate ? new Date(project.startDate).toISOString() : null,
         endDate: project.endDate && !project.isOngoing ? new Date(project.endDate).toISOString() : null,
-        // Ensure technologies is array
-        technologies: Array.isArray(project.technologies) ? project.technologies : 
-          (project.technologies ? project.technologies.split(',').map(t => t.trim()) : [])
+        // Ensure technologies is array and filter empty strings
+        technologies: Array.isArray(project.technologies) ? 
+          project.technologies.filter(tech => tech && tech.trim()) : 
+          (project.technologies ? project.technologies.split(',').map(t => t.trim()).filter(t => t) : []),
+        achievements: project.achievements ? project.achievements.filter(item => item && item.trim()) : []
+      }))
+    }
+    
+    // Clean skills arrays
+    if (cleaned.skills) {
+      if (cleaned.skills.soft) {
+        cleaned.skills.soft = cleaned.skills.soft.filter(skill => skill && skill.trim())
+      }
+      if (cleaned.skills.technical) {
+        cleaned.skills.technical = cleaned.skills.technical.filter(skill => skill && skill.name && skill.name.trim())
+      }
+    }
+    
+    // Clean education arrays
+    if (cleaned.education) {
+      cleaned.education = cleaned.education.map(edu => ({
+        ...edu,
+        startDate: edu.startDate ? new Date(edu.startDate).toISOString() : null,
+        endDate: edu.endDate && !edu.isCurrentlyEnrolled ? new Date(edu.endDate).toISOString() : null,
+        honors: edu.honors ? edu.honors.filter(honor => honor && honor.trim()) : [],
+        relevantCoursework: edu.relevantCoursework ? edu.relevantCoursework.filter(course => course && course.trim()) : []
       }))
     }
     
@@ -186,9 +224,12 @@ const ResumeBuilder = () => {
 
   // Load existing resume data
   useEffect(() => {
+    console.log('useEffect for loading data - id:', id, 'condition:', id && id !== 'new')
     if (id && id !== 'new') {
+      console.log('Calling loadResumeData for id:', id)
       loadResumeData()
     } else if (user) {
+      console.log('Not loading existing data - creating new resume or pre-populating user data')
       // Pre-populate with user data for new resume
       setResumeData(prev => ({
         ...prev,
@@ -207,15 +248,64 @@ const ResumeBuilder = () => {
     try {
       const response = await resumeAPI.getResumeById(id)
       
+      // Debug logging
+      console.log('Load resume response:', response.data)
+      
       // Check if response has the expected structure
       const resumeData = response.data?.data?.resume || response.data
+      
+      console.log('Loaded resume data:', resumeData)
+      console.log('Experience data:', resumeData.experience)
+      console.log('Education data:', resumeData.education)
+      console.log('Skills data:', resumeData.skills)
+      console.log('Projects data:', resumeData.projects)
       
       if (!resumeData) {
         throw new Error('Invalid response structure')
       }
       
-      setResumeData(resumeData)
+      // Ensure proper structure with fallbacks
+      const structuredData = {
+        ...resumeData,
+        personalInfo: {
+          fullName: '',
+          email: '',
+          phone: '',
+          address: { street: '', city: '', state: '', zipCode: '', country: '' },
+          website: '',
+          linkedin: '',
+          github: '',
+          portfolio: '',
+          profilePicture: '',
+          professionalSummary: '',
+          ...resumeData.personalInfo
+        },
+        experience: resumeData.experience || [],
+        education: resumeData.education || [],
+        skills: resumeData.skills || { technical: [], soft: [], languages: [] },
+        projects: resumeData.projects || [],
+        certifications: resumeData.certifications || [],
+        achievements: resumeData.achievements || [],
+        volunteerWork: resumeData.volunteerWork || [],
+        references: resumeData.references || [],
+        customSections: resumeData.customSections || []
+      }
+      
+      console.log('PersonalInfo loaded from backend:', resumeData.personalInfo)
+      console.log('PersonalInfo after structuring:', structuredData.personalInfo)
+      
+      console.log('Setting structured data:', structuredData)
+      setResumeData(structuredData)
       setLastSaved(new Date())
+      
+      // Verify state after setting
+      setTimeout(() => {
+        console.log('Resume data state after loading:')
+        console.log('Experience:', structuredData.experience)
+        console.log('Education:', structuredData.education) 
+        console.log('Skills:', structuredData.skills)
+        console.log('Projects:', structuredData.projects)
+      }, 100)
     } catch (error) {
       console.error('Error loading resume:', error)
       console.error('Response structure:', response?.data)
@@ -231,6 +321,23 @@ const ResumeBuilder = () => {
   const handleDataChange = useCallback((e) => {
     const { name, value } = e.target
     
+    // Debug form changes
+    if (name.includes('personalInfo')) {
+      console.log('PersonalInfo field changed:', name, '=', value)
+    }
+    if (name === 'experience') {
+      console.log('Experience array changed, new length:', value.length)
+    }
+    if (name === 'education') {
+      console.log('Education array changed, new length:', value.length)
+    }
+    if (name === 'skills') {
+      console.log('Skills object changed:', value)
+    }
+    if (name === 'projects') {
+      console.log('Projects array changed, new length:', value.length)
+    }
+    
     setResumeData(prev => {
       if (name.includes('.')) {
         // Handle nested properties
@@ -244,12 +351,26 @@ const ResumeBuilder = () => {
         }
         
         current[keys[keys.length - 1]] = value
+        
+        // Debug state after nested change
+        if (name.includes('experience') || name.includes('education') || name.includes('skills') || name.includes('projects')) {
+          console.log('State updated for:', name, 'New data:', newData[keys[0]])
+        }
+        
         return newData
       } else {
-        return {
+        // Handle direct properties
+        const newState = {
           ...prev,
           [name]: value
         }
+        
+        // Debug state after direct change
+        if (['experience', 'education', 'skills', 'projects'].includes(name)) {
+          console.log('Direct state update for:', name, 'New value:', value)
+        }
+        
+        return newState
       }
     })
     
@@ -313,6 +434,14 @@ const ResumeBuilder = () => {
         isDraft: true // Mark as draft when saving
       })
       
+      console.log('Saving resume data:', dataToSave)
+      console.log('PersonalInfo being saved:', dataToSave.personalInfo)
+      console.log('Website field specifically:', dataToSave.personalInfo?.website)
+      console.log('Experience being saved:', dataToSave.experience)
+      console.log('Education being saved:', dataToSave.education)
+      console.log('Skills being saved:', dataToSave.skills)
+      console.log('Projects being saved:', dataToSave.projects)
+      
       let response
       if (id && id !== 'new') {
         response = await resumeAPI.updateResume(id, dataToSave)
@@ -335,10 +464,18 @@ const ResumeBuilder = () => {
         const newResumeId = response.data.data.resume._id
         
         // Update URL to reflect the new resume ID
+        console.log('Navigating to new resume ID:', newResumeId)
         navigate(`/resume-builder/${newResumeId}`, { replace: true })
         
         // Then update with full data as draft
+        console.log('Updating resume with full data:', dataToSave)
         response = await resumeAPI.updateResume(newResumeId, dataToSave)
+        
+        // Force reload the data after navigation
+        setTimeout(() => {
+          console.log('Force reloading data after navigation')
+          loadResumeData()
+        }, 100)
       }
       
       setHasUnsavedChanges(false)

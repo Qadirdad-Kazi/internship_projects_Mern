@@ -1,9 +1,17 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Zap, Plus, Trash2, Code, MessageCircle, Globe } from 'lucide-react'
 import { FormInput, FormSelect } from '../Forms'
 
 const SkillsForm = ({ data = {}, onChange, errors = {} }) => {
   const [activeSection, setActiveSection] = useState('technical')
+  
+  // Debug logging
+  useEffect(() => {
+    console.log('SkillsForm received data:', data)
+    console.log('Technical skills:', data.technical)
+    console.log('Soft skills:', data.soft)
+    console.log('Languages:', data.languages)
+  }, [data])
 
   const skillLevels = [
     { value: 'beginner', label: 'Beginner' },

@@ -4,6 +4,12 @@ import { FormInput, FormTextarea, FormDatePicker } from '../Forms'
 
 const ProjectsForm = ({ data = [], onChange, errors = {} }) => {
   const [expandedItems, setExpandedItems] = useState(new Set([0]))
+  
+  // Debug logging
+  useEffect(() => {
+    console.log('ProjectsForm received data:', data)
+    console.log('Projects data length:', data.length)
+  }, [data])
 
   const addProject = () => {
     const newProject = {

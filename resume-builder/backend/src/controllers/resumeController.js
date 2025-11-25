@@ -193,11 +193,20 @@ const updateResume = async (req, res) => {
     delete updates.createdAt;
     delete updates.metadata;
     
+    // For drafts, bypass validation to allow incomplete data
+    const isDraft = updates.isDraft === true || updates.isDraft === 'true'
+    const validationOptions = isDraft ? { new: true, runValidators: false } : { new: true, runValidators: true }
+    
+    console.log('Updating resume - isDraft:', isDraft, 'runValidators:', validationOptions.runValidators)
+    console.log('Updates being applied:', JSON.stringify(updates, null, 2))
+    
     const resume = await Resume.findOneAndUpdate(
       { _id: id, userId, isActive: true },
       { $set: updates },
-      { new: true, runValidators: true }
+      validationOptions
     );
+    
+    console.log('Updated resume result:', JSON.stringify(resume, null, 2))
     
     if (!resume) {
       return res.status(404).json({

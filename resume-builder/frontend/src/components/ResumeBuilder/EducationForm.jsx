@@ -1,9 +1,15 @@
 import { useState, useEffect } from 'react'
-import { GraduationCap, Plus, Trash2, Award } from 'lucide-react'
+import { GraduationCap, Plus, Trash2, Calendar, MapPin, Award } from 'lucide-react'
 import { FormInput, FormTextarea, FormDatePicker, FormSelect } from '../Forms'
 
 const EducationForm = ({ data = [], onChange, errors = {} }) => {
   const [expandedItems, setExpandedItems] = useState(new Set([0]))
+  
+  // Debug logging
+  useEffect(() => {
+    console.log('EducationForm received data:', data)
+    console.log('Education data length:', data.length)
+  }, [data])
 
   const degreeOptions = [
     { value: '', label: 'Select Degree Type' },
