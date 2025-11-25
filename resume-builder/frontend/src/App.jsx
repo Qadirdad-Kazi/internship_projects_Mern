@@ -20,6 +20,10 @@ import Profile from './pages/Profile/Profile'
 // Public Pages
 import Landing from './pages/Public/Landing'
 import PublicResume from './pages/Public/PublicResume'
+import Features from './pages/Features/Features'
+import Templates from './pages/Templates/Templates'
+import Pricing from './pages/Pricing/Pricing'
+import Help from './pages/Help/Help'
 
 // Error Pages
 import NotFound from './pages/Error/NotFound'
@@ -51,6 +55,10 @@ function App() {
           <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
           <Route path="/register" element={user ? <Navigate to="/dashboard" replace /> : <Register />} />
           <Route path="/resume/:shareId" element={<PublicResume />} />
+          <Route path="/features" element={<Features />} />
+          <Route path="/templates" element={<Templates />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/help" element={<Help />} />
         </Route>
 
         {/* Protected Routes */}
