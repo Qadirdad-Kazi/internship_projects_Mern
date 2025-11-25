@@ -11,6 +11,7 @@ const resumeRoutes = require('./routes/resumeRoutes');
 const pdfRoutes = require('./routes/pdfRoutes');
 
 const app = express();
+app.set('trust proxy', 1); // Trust Vercel proxy for correct IP detection
 
 // Security middleware
 app.use(helmet());
