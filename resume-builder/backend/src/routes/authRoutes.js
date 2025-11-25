@@ -46,6 +46,17 @@ router.put('/profile',
 );
 
 /**
+ * @route   PUT /api/v1/auth/preferences
+ * @desc    Update user preferences
+ * @access  Private
+ */
+router.put('/preferences',
+  authMiddleware,
+  validateRequest(schemas.updatePreferences),
+  authController.updatePreferences
+);
+
+/**
  * @route   PUT /api/v1/auth/change-password
  * @desc    Change user password
  * @access  Private

@@ -78,21 +78,27 @@ const schemas = {
       dateOfBirth: Joi.date().iso()
     }),
     preferences: Joi.object({
-      defaultTemplate: Joi.string().valid('modern', 'classic', 'minimal', 'creative'),
+      defaultTemplate: Joi.string().valid('modern-professional', 'executive-classic', 'minimal-clean', 'creative-portfolio', 'tech-innovator', 'corporate-elite', 'simple-effective', 'design-studio', 'modern', 'classic', 'minimal', 'creative'),
       language: Joi.string().trim(),
       timezone: Joi.string().trim()
     })
+  }),
+
+  updatePreferences: Joi.object({
+    defaultTemplate: Joi.string().valid('modern-professional', 'executive-classic', 'minimal-clean', 'creative-portfolio', 'tech-innovator', 'corporate-elite', 'simple-effective', 'design-studio', 'modern', 'classic', 'minimal', 'creative'),
+    language: Joi.string().trim(),
+    timezone: Joi.string().trim()
   }),
   
   // Resume schemas
   createResume: Joi.object({
     title: Joi.string().trim().min(1).max(100).required(),
-    template: Joi.string().valid('modern', 'classic', 'minimal', 'creative').default('modern')
+    template: Joi.string().valid('modern-professional', 'executive-classic', 'minimal-clean', 'creative-portfolio', 'tech-innovator', 'corporate-elite', 'simple-effective', 'design-studio', 'modern', 'classic', 'minimal', 'creative').default('modern-professional')
   }),
   
   updateResume: Joi.object({
     title: Joi.string().trim().min(1).max(100),
-    template: Joi.string().valid('modern', 'classic', 'minimal', 'creative'),
+    template: Joi.string().valid('modern-professional', 'executive-classic', 'minimal-clean', 'creative-portfolio', 'tech-innovator', 'corporate-elite', 'simple-effective', 'design-studio', 'modern', 'classic', 'minimal', 'creative'),
     personalInfo: Joi.object({
       fullName: Joi.string().trim().allow(''),
       email: Joi.string().email().allow(''),
@@ -206,7 +212,7 @@ const schemas = {
     page: Joi.number().integer().min(1).default(1),
     limit: Joi.number().integer().min(1).max(100).default(10),
     sort: Joi.string().valid('createdAt', '-createdAt', 'updatedAt', '-updatedAt', 'title', '-title').default('-updatedAt'),
-    template: Joi.string().valid('modern', 'classic', 'minimal', 'creative'),
+    template: Joi.string().valid('modern-professional', 'executive-classic', 'minimal-clean', 'creative-portfolio', 'tech-innovator', 'corporate-elite', 'simple-effective', 'design-studio', 'modern', 'classic', 'minimal', 'creative'),
     search: Joi.string().trim().max(100)
   })
 };

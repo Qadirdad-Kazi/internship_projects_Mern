@@ -132,7 +132,8 @@ const checkSubscription = (requiredPlan = 'free') => {
   };
 };
 
-const rateLimitByUser = (maxRequests = 100, windowMs = 15 * 60 * 1000) => {
+// Rate limiter for frequent operations like resume saves
+const rateLimitByUserFast = (maxRequests = 10, windowMs = 60 * 1000) => {
   const userRequests = new Map();
   
   return (req, res, next) => {
@@ -148,19 +149,74 @@ const rateLimitByUser = (maxRequests = 100, windowMs = 15 * 60 * 1000) => {
       userRequests.set(userId, []);
     }
     
-    const requests = userRequests.get(userId);
-    const validRequests = requests.filter(timestamp => timestamp > windowStart);
+    let requests = userRequests.get(userId);
+    requests = requests.filter(timestamp => timestamp > windowStart);
     
-    if (validRequests.length >= maxRequests) {
+    if (requests.length >= maxRequests) {
       return res.status(429).json({
         status: 'error',
         message: 'Rate limit exceeded. Please try again later.',
-        retryAfter: Math.ceil((requests[0] + windowMs - now) / 1000)
+        retryAfter: 5000 // Fixed 5 second retry for fast operations
       });
     }
     
-    validRequests.push(now);
-    userRequests.set(userId, validRequests);
+    requests.push(now);
+    userRequests.set(userId, requests);
+    
+    next();
+  };
+};
+
+const rateLimitByUser = (maxRequests = 100, windowMs = 15 * 60 * 1000) => {
+  const userRequests = new Map();
+  
+  // Clean up old entries every 5 minutes to prevent memory leaks
+  setInterval(() => {
+    const now = Date.now();
+    const cutoff = now - windowMs;
+    
+    for (const [userId, requests] of userRequests.entries()) {
+      const validRequests = requests.filter(timestamp => timestamp > cutoff);
+      if (validRequests.length === 0) {
+        userRequests.delete(userId);
+      } else {
+        userRequests.set(userId, validRequests);
+      }
+    }
+  }, 5 * 60 * 1000);
+  
+  return (req, res, next) => {
+    if (!req.user) {
+      return next();
+    }
+    
+    const userId = req.user._id.toString();
+    const now = Date.now();
+    const windowStart = now - windowMs;
+    
+    if (!userRequests.has(userId)) {
+      userRequests.set(userId, []);
+    }
+    
+    let requests = userRequests.get(userId);
+    // Filter out expired requests
+    requests = requests.filter(timestamp => timestamp > windowStart);
+    
+    if (requests.length >= maxRequests) {
+      // Calculate retry after based on oldest request in current window
+      const oldestRequest = Math.min(...requests);
+      const retryAfterMs = oldestRequest + windowMs - now;
+      
+      return res.status(429).json({
+        status: 'error',
+        message: 'Rate limit exceeded. Please try again later.',
+        retryAfter: Math.max(1000, retryAfterMs) // Minimum 1 second
+      });
+    }
+    
+    // Add current request
+    requests.push(now);
+    userRequests.set(userId, requests);
     
     next();
   };
@@ -215,5 +271,6 @@ module.exports = {
   optionalAuth,
   checkSubscription,
   rateLimitByUser,
+  rateLimitByUserFast,
   validateOwnership
 };

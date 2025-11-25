@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const resumeController = require('../controllers/resumeController');
-const { authMiddleware, optionalAuth, validateOwnership, rateLimitByUser } = require('../middleware/auth');
+const { authMiddleware, optionalAuth, validateOwnership, rateLimitByUser, rateLimitByUserFast } = require('../middleware/auth');
 const { validateRequest, validateQuery, schemas } = require('../middleware/validation');
 
 /**
@@ -11,7 +11,7 @@ const { validateRequest, validateQuery, schemas } = require('../middleware/valid
  */
 router.post('/',
   authMiddleware,
-  rateLimitByUser(20, 60 * 60 * 1000), // 20 resumes per hour
+  rateLimitByUserFast(3, 60 * 1000), // 3 creates per minute
   validateRequest(schemas.createResume),
   resumeController.createResume
 );
@@ -46,7 +46,7 @@ router.get('/:id',
 router.put('/:id',
   authMiddleware,
   validateOwnership('resume'),
-  rateLimitByUser(50, 60 * 60 * 1000), // 50 updates per hour
+  rateLimitByUserFast(6, 60 * 1000), // 6 updates per minute
   validateRequest(schemas.updateResume),
   resumeController.updateResume
 );
@@ -70,7 +70,7 @@ router.delete('/:id',
 router.post('/:id/duplicate',
   authMiddleware,
   validateOwnership('resume'),
-  rateLimitByUser(10, 60 * 60 * 1000), // 10 duplications per hour
+  rateLimitByUser(20, 60 * 60 * 1000), // 20 duplications per hour
   resumeController.duplicateResume
 );
 

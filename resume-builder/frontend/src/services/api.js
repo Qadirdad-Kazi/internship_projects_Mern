@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { apiCache } from '../utils/cache'
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -11,9 +12,28 @@ const api = axios.create({
 
 // Request interceptor
 api.interceptors.request.use(
-  (config) => {
-    // Add timestamp to prevent caching for GET requests
-    if (config.method === 'get') {
+  async (config) => {
+    // Handle caching for GET requests
+    if (config.method === 'get' && config.cache !== false) {
+      const cacheKey = `${config.url}${config.params ? '?' + new URLSearchParams(config.params).toString() : ''}`
+      const cached = apiCache.get(cacheKey)
+      
+      if (cached) {
+        // Return cached response by creating a mock axios response
+        return Promise.reject({
+          isAxiosError: false,
+          isCached: true,
+          data: cached,
+          status: 200,
+          statusText: 'OK (Cached)',
+          headers: {},
+          config
+        })
+      }
+    }
+    
+    // Add timestamp for non-cached GET requests
+    if (config.method === 'get' && config.cache === false) {
       config.params = {
         ...config.params,
         _t: Date.now()
@@ -31,9 +51,27 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
+    // Cache successful GET responses
+    if (response.config.method === 'get' && response.config.cache !== false) {
+      const cacheKey = `${response.config.url}${response.config.params ? '?' + new URLSearchParams(response.config.params).toString() : ''}`
+      const cacheTTL = response.config.cacheTTL || 5 * 60 * 1000 // 5 minutes default
+      apiCache.set(cacheKey, response.data, cacheTTL)
+    }
+    
     return response
   },
   async (error) => {
+    // Handle cached responses
+    if (error.isCached) {
+      return Promise.resolve({
+        data: error.data,
+        status: error.status,
+        statusText: error.statusText,
+        headers: error.headers,
+        config: error.config
+      })
+    }
+    
     const originalRequest = error.config
     
     // Handle 401 errors (token expired)
@@ -116,5 +154,69 @@ export const uploadAPI = {
       'Content-Type': 'multipart/form-data'
     },
     timeout: 60000
+  })
+}
+
+// Cache management API
+export const cacheAPI = {
+  // Clear all API cache
+  clearAll: () => {
+    apiCache.clear()
+  },
+  
+  // Clear specific cache entries
+  clearAuth: () => {
+    const authKeys = ['profile', 'refresh-token']
+    authKeys.forEach(key => apiCache.delete(`/auth/${key}`))
+  },
+  
+  clearResumes: () => {
+    // Clear all resume-related cache entries
+    const patterns = ['/resumes', '/resumes/']
+    patterns.forEach(pattern => {
+      // Note: This is a simplified clear - in production you might want more sophisticated pattern matching
+      apiCache.delete(pattern)
+    })
+  },
+  
+  // Invalidate cache for specific resume
+  invalidateResume: (id) => {
+    apiCache.delete(`/resumes/${id}`)
+    apiCache.delete('/resumes') // Also clear list cache
+  },
+  
+  // Get cache statistics
+  getStats: () => {
+    return {
+      apiCacheSize: apiCache.has('stats') ? Object.keys(apiCache.get('stats') || {}).length : 0
+    }
+  }
+}
+
+// Enhanced API functions with caching options
+export const cachedAPI = {
+  // Get user profile with caching
+  getProfile: (forceFresh = false) => api.get('/auth/profile', { 
+    cache: !forceFresh,
+    cacheTTL: 10 * 60 * 1000 // 10 minutes
+  }),
+  
+  // Get resumes with caching
+  getResumes: (params = {}, forceFresh = false) => api.get('/resumes', { 
+    params,
+    cache: !forceFresh,
+    cacheTTL: 5 * 60 * 1000 // 5 minutes
+  }),
+  
+  // Get specific resume with caching
+  getResume: (id, forceFresh = false) => api.get(`/resumes/${id}`, { 
+    cache: !forceFresh,
+    cacheTTL: 15 * 60 * 1000 // 15 minutes for individual resumes
+  }),
+  
+  // Get public resume with longer caching
+  getPublicResume: (shareId, forceFresh = false) => api.get(`/resumes/public/${shareId}`, { 
+    cache: !forceFresh,
+    cacheTTL: 30 * 60 * 1000 // 30 minutes for public resumes
   })
 }

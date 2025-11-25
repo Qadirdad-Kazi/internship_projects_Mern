@@ -3,21 +3,35 @@ import { useNavigate } from 'react-router-dom'
 import { Eye, Download, Star, Check, Filter, Search } from 'lucide-react'
 import templates from '../../components/Templates/index'
 import TemplatePreview from '../../components/Templates/TemplatePreview'
+import { useAuthStore } from '../../stores/authStore'
 
 const Templates = () => {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
   const navigate = useNavigate()
   const [previewTemplate, setPreviewTemplate] = useState(null)
+  const { saveUserPreferences, user } = useAuthStore()
 
   const handlePreviewTemplate = (template) => {
     setPreviewTemplate(template.id)
   }
 
-  const handleUseTemplate = (template) => {
-    // Store selected template in localStorage or state management
-    localStorage.setItem('selectedTemplate', JSON.stringify(template))
-    navigate('/resume-builder')
+  const handleUseTemplate = async (template) => {
+    // Save user's template preference to MongoDB if logged in
+    if (user) {
+      await saveUserPreferences({ 
+        defaultTemplate: template.category || template.id.split('-')[0] 
+      })
+    }
+    
+    // Navigate to resume builder with template in URL params
+    if (user) {
+      // If logged in, go to protected resume builder
+      navigate(`/resume-builder?template=${template.id}`)
+    } else {
+      // If not logged in, redirect to login first
+      navigate(`/login?redirect=/resume-builder&template=${template.id}`)
+    }
   }
 
   const categories = [

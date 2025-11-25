@@ -60,9 +60,6 @@ resume-builder/
 └── README.md
 ```
 
-## 🔐 Default Credentials
-- **Email**: admin@resume.com
-- **Password**: admin123
 
 ## 📋 API Endpoints
 - `POST /api/auth/login` - User login

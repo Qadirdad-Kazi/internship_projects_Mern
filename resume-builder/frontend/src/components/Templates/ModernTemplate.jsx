@@ -14,7 +14,7 @@ const ModernTemplate = ({ data, colors = { primary: '#2563eb', secondary: '#6474
   const accentColor = colors.accent
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-white shadow-lg" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div className="w-full max-w-4xl mx-auto bg-white shadow-lg min-h-[800px]" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       {/* Header Section */}
       <div 
         className="px-8 py-6 text-white"
@@ -23,9 +23,9 @@ const ModernTemplate = ({ data, colors = { primary: '#2563eb', secondary: '#6474
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <h1 className="text-3xl font-bold mb-2">
-              {personalInfo.firstName} {personalInfo.lastName}
+              {personalInfo.fullName || `${personalInfo.firstName || ''} ${personalInfo.lastName || ''}`.trim() || 'Your Name'}
             </h1>
-            <p className="text-xl opacity-90 mb-4">{personalInfo.title}</p>
+            <p className="text-xl opacity-90 mb-4">{personalInfo.title || 'Professional Title'}</p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
               {personalInfo.email && (
@@ -61,23 +61,22 @@ const ModernTemplate = ({ data, colors = { primary: '#2563eb', secondary: '#6474
         {/* Left Column */}
         <div className="w-2/3 p-8">
           {/* Professional Summary */}
-          {personalInfo.summary && (
-            <section className="mb-8">
-              <h2 className="text-xl font-bold mb-3" style={{ color: primaryColor }}>
-                Professional Summary
-              </h2>
-              <p className="text-gray-700 leading-relaxed">{personalInfo.summary}</p>
-            </section>
-          )}
+          <section className="mb-8">
+            <h2 className="text-xl font-bold mb-3" style={{ color: primaryColor }}>
+              Professional Summary
+            </h2>
+            <p className="text-gray-700 leading-relaxed">
+              {personalInfo.summary || personalInfo.professionalSummary || 'Add your professional summary to showcase your experience and career objectives.'}
+            </p>
+          </section>
 
           {/* Experience */}
-          {experience.length > 0 && (
-            <section className="mb-8">
-              <h2 className="text-xl font-bold mb-4" style={{ color: primaryColor }}>
-                Professional Experience
-              </h2>
-              <div className="space-y-6">
-                {experience.map((exp, index) => (
+          <section className="mb-8">
+            <h2 className="text-xl font-bold mb-4" style={{ color: primaryColor }}>
+              Professional Experience
+            </h2>
+            <div className="space-y-6">
+              {experience.length > 0 ? experience.map((exp, index) => (
                   <div key={index} className="relative">
                     <div className="flex items-start justify-between mb-2">
                       <div>
@@ -95,10 +94,13 @@ const ModernTemplate = ({ data, colors = { primary: '#2563eb', secondary: '#6474
                     </div>
                     <p className="text-gray-700 leading-relaxed">{exp.description}</p>
                   </div>
-                ))}
+                )) : (
+                  <div className="text-gray-500 italic">
+                    Add your work experience to showcase your professional background.
+                  </div>
+                )}
               </div>
             </section>
-          )}
 
           {/* Projects */}
           {projects.length > 0 && (

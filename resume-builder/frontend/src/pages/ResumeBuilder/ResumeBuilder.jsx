@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Palette, FileText, Settings, Save, Eye, AlertCircle, CheckCircle, Users, BookOpen, Code, FolderOpen, Briefcase } from 'lucide-react'
 import { 
   PersonalInfoForm, 
@@ -18,24 +18,35 @@ import templates from '../../components/Templates/index'
 const ResumeBuilder = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuthStore()
   
   const [activeTab, setActiveTab] = useState('content')
   const [activeContentSection, setActiveContentSection] = useState('personal')
-  // Check for selected template from Templates page
+  
+  // Get initial template from URL params, user preferences, or fallback
   const getInitialTemplate = () => {
-    const selectedTemplate = localStorage.getItem('selectedTemplate')
-    if (selectedTemplate) {
-      const template = JSON.parse(selectedTemplate)
-      localStorage.removeItem('selectedTemplate') // Clean up
-      return template.id
+    const searchParams = new URLSearchParams(location.search)
+    const urlTemplate = searchParams.get('template')
+    
+    if (urlTemplate) {
+      // Validate that the template exists
+      const templateExists = templates.some(t => t.id === urlTemplate)
+      if (templateExists) {
+        return urlTemplate
+      }
     }
-    return 'modern-professional'
+    
+    return user?.preferences?.defaultTemplate || 'modern-professional'
   }
 
+  // Get template from URL params or use default
+  const urlParams = new URLSearchParams(location.search)
+  const templateFromUrl = urlParams.get('template')
+  
   const [resumeData, setResumeData] = useState({
     title: '',
-    template: getInitialTemplate(),
+    template: templateFromUrl || getInitialTemplate(),
     personalInfo: {
       fullName: '',
       email: '',
@@ -95,7 +106,9 @@ const ResumeBuilder = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
-  const [showPreview, setShowPreview] = useState(false)
+  const [showPreview, setShowPreview] = useState(true)
+  const [lastSaveAttempt, setLastSaveAttempt] = useState(null)
+  const [rateLimitCountdown, setRateLimitCountdown] = useState(0)
 
   // Auto-save functionality
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
@@ -179,20 +192,50 @@ const ResumeBuilder = () => {
     }
   }, [errors])
 
-  // Auto-save every 30 seconds if there are unsaved changes
+  // Debounced auto-save - save 2 minutes after last change to prevent rate limiting
   useEffect(() => {
     if (!hasUnsavedChanges) return
 
-    const autoSaveInterval = setInterval(() => {
+    const autoSaveTimeout = setTimeout(() => {
       if (hasUnsavedChanges) {
         saveResume(true) // Auto-save
       }
-    }, 30000) // 30 seconds
+    }, 300000) // 5 minutes delay
 
-    return () => clearInterval(autoSaveInterval)
-  }, [hasUnsavedChanges])
+    return () => clearTimeout(autoSaveTimeout)
+  }, [hasUnsavedChanges, resumeData]) // Re-run when data changes
+
+  // Update rate limit countdown
+  useEffect(() => {
+    if (!lastSaveAttempt) return
+
+    const updateCountdown = () => {
+      const now = new Date().getTime()
+      const timeLeft = Math.max(0, 5000 - (now - lastSaveAttempt))
+      setRateLimitCountdown(Math.ceil(timeLeft / 1000))
+      
+      if (timeLeft <= 0) {
+        setLastSaveAttempt(null)
+        setRateLimitCountdown(0)
+      }
+    }
+
+    updateCountdown()
+    const interval = setInterval(updateCountdown, 1000)
+    return () => clearInterval(interval)
+  }, [lastSaveAttempt])
 
   const saveResume = async (isAutoSave = false) => {
+    // Prevent too frequent saves (minimum 5 seconds between saves)
+    const now = new Date().getTime()
+    if (lastSaveAttempt && (now - lastSaveAttempt) < 5000) {
+      if (!isAutoSave) {
+        alert('Please wait before saving again. Saves are limited to prevent server overload.')
+      }
+      return
+    }
+    
+    setLastSaveAttempt(now)
     if (!isAutoSave) setIsSaving(true)
     
     try {
@@ -210,14 +253,22 @@ const ResumeBuilder = () => {
         // For new resumes, first create with minimal data
         const createData = {
           title: resumeData.title || 'Untitled Resume',
-          template: resumeData.template || 'modern'
+          template: resumeData.template || 'modern-professional'
         }
         
+        console.log('Creating resume with data:', createData)
         response = await resumeAPI.createResume(createData)
-        const newResumeId = response.data.resume._id
+        
+        // Check if response has the expected structure
+        if (!response?.data?.data?.resume?._id) {
+          console.error('Unexpected response structure:', response)
+          throw new Error('Invalid response from server')
+        }
+        
+        const newResumeId = response.data.data.resume._id
         
         // Update URL to reflect the new resume ID
-        navigate(`/dashboard/resume-builder/${newResumeId}`, { replace: true })
+        navigate(`/resume-builder/${newResumeId}`, { replace: true })
         
         // Then update with full data as draft
         response = await resumeAPI.updateResume(newResumeId, dataToSave)
@@ -235,6 +286,17 @@ const ResumeBuilder = () => {
       console.error('Error saving resume:', error)
       console.error('Error details:', error.response?.data)
       
+      // Handle rate limiting specifically
+      if (error.response?.status === 429) {
+        const retryAfter = error.response?.data?.retryAfter || 60
+        if (!isAutoSave) {
+          alert(`Rate limit exceeded. Please wait ${Math.ceil(retryAfter / 1000)} seconds before trying again.`)
+        }
+        // Set a longer delay before allowing next save
+        setLastSaveAttempt(now + retryAfter)
+        return
+      }
+      
       // Handle validation errors
       if (error.response?.data?.errors) {
         setErrors(error.response.data.errors)
@@ -242,7 +304,11 @@ const ResumeBuilder = () => {
       
       // Show user-friendly error message
       if (!isAutoSave) {
-        alert('Failed to save resume. Please check the form for errors and try again.')
+        if (error.response?.status === 400) {
+          alert('Please check the form for validation errors and try again.')
+        } else {
+          alert('Failed to save resume. Please try again in a moment.')
+        }
       }
     } finally {
       if (!isAutoSave) setIsSaving(false)
@@ -250,6 +316,14 @@ const ResumeBuilder = () => {
   }
 
   const publishResume = async () => {
+    // Check rate limiting for publish as well
+    const now = new Date().getTime()
+    if (lastSaveAttempt && (now - lastSaveAttempt) < 5000) {
+      alert('Please wait before publishing. Operations are limited to prevent server overload.')
+      return
+    }
+    
+    setLastSaveAttempt(now)
     setIsSaving(true)
     
     try {
@@ -292,6 +366,14 @@ const ResumeBuilder = () => {
     } catch (error) {
       console.error('Error publishing resume:', error)
       console.error('Error details:', error.response?.data)
+      
+      // Handle rate limiting
+      if (error.response?.status === 429) {
+        const retryAfter = error.response?.data?.retryAfter || 60
+        alert(`Rate limit exceeded. Please wait ${Math.ceil(retryAfter / 1000)} seconds before trying again.`)
+        setLastSaveAttempt(now + retryAfter)
+        return
+      }
       
       if (error.response?.data?.errors) {
         setErrors(error.response.data.errors)
@@ -411,6 +493,13 @@ const ResumeBuilder = () => {
                   Unsaved changes
                 </div>
               )}
+              
+              {rateLimitCountdown > 0 && (
+                <div className="flex items-center text-sm text-red-600">
+                  <AlertCircle className="h-4 w-4 mr-1" />
+                  Please wait {rateLimitCountdown}s before saving again
+                </div>
+              )}
             </div>
           </div>
           
@@ -425,7 +514,7 @@ const ResumeBuilder = () => {
             
             <button 
               onClick={() => saveResume()}
-              disabled={isSaving || (!hasUnsavedChanges && id !== 'new')}
+              disabled={isSaving || (!hasUnsavedChanges && id !== 'new') || (lastSaveAttempt && (new Date().getTime() - lastSaveAttempt) < 5000)}
               className="btn-secondary flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="h-4 w-4 mr-2" />
@@ -434,7 +523,7 @@ const ResumeBuilder = () => {
             
             <button 
               onClick={() => publishResume()}
-              disabled={isSaving || !resumeData.personalInfo?.fullName || !resumeData.personalInfo?.email}
+              disabled={isSaving || !resumeData.personalInfo?.fullName || !resumeData.personalInfo?.email || (lastSaveAttempt && (new Date().getTime() - lastSaveAttempt) < 5000)}
               className="btn-primary flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
               title={(!resumeData.personalInfo?.fullName || !resumeData.personalInfo?.email) ? 'Please fill in at least your name and email to publish' : ''}
             >
@@ -445,9 +534,9 @@ const ResumeBuilder = () => {
         </div>
 
         {/* Main Content */}
-        <div className={`grid gap-6 ${showPreview ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1'}`}>
+        <div className={`grid gap-6 ${showPreview ? 'grid-cols-1 lg:grid-cols-5' : 'grid-cols-1'}`}>
           {/* Forms Panel */}
-          <div className="bg-white shadow-soft rounded-lg">
+          <div className={`bg-white shadow-soft rounded-lg ${showPreview ? 'lg:col-span-2' : 'col-span-1'}`}>
             {/* Main Tabs */}
             <div className="border-b border-gray-200">
               <nav className="flex space-x-8 px-6">
@@ -525,8 +614,8 @@ const ResumeBuilder = () => {
 
           {/* Preview Panel */}
           {showPreview && (
-            <div className="bg-white shadow-soft rounded-lg">
-              <div className="p-6">
+            <div className="bg-white shadow-soft rounded-lg lg:col-span-3">
+              <div className="p-4 h-full">
                 <ResumePreview 
                   data={resumeData}
                   template={resumeData.template}

@@ -19,38 +19,59 @@ const ResumePreview = ({ data = {}, template = 'modern-professional' }) => {
     personalInfo: {
       firstName: personalInfo.fullName?.split(' ')[0] || '',
       lastName: personalInfo.fullName?.split(' ').slice(1).join(' ') || '',
+      fullName: personalInfo.fullName || '',
       title: personalInfo.title || '',
       email: personalInfo.email || '',
       phone: personalInfo.phone || '',
+      address: personalInfo.address || {},
       location: personalInfo.address ? 
         [personalInfo.address.city, personalInfo.address.state].filter(Boolean).join(', ') : '',
       website: personalInfo.website || '',
-      summary: personalInfo.professionalSummary || ''
+      linkedin: personalInfo.linkedin || '',
+      github: personalInfo.github || '',
+      portfolio: personalInfo.portfolio || '',
+      summary: personalInfo.professionalSummary || '',
+      professionalSummary: personalInfo.professionalSummary || ''
     },
     experience: experience.map(exp => ({
-      position: exp.position || '',
+      jobTitle: exp.jobTitle || '',
+      position: exp.jobTitle || exp.position || '',
       company: exp.company || '',
       location: exp.location || '',
       startDate: exp.startDate || '',
       endDate: exp.endDate || '',
-      current: exp.current || false,
-      description: exp.description || ''
+      current: exp.isCurrentJob || exp.current || false,
+      isCurrentJob: exp.isCurrentJob || false,
+      description: exp.description || '',
+      achievements: exp.achievements || [],
+      technologies: exp.technologies || []
     })),
     education: education.map(edu => ({
       degree: edu.degree || '',
       institution: edu.institution || '',
-      year: edu.graduationYear || edu.year || ''
+      location: edu.location || '',
+      startDate: edu.startDate || '',
+      endDate: edu.endDate || '',
+      graduationYear: edu.graduationYear || edu.year || '',
+      year: edu.graduationYear || edu.year || '',
+      gpa: edu.gpa || '',
+      honors: edu.honors || [],
+      relevantCoursework: edu.relevantCoursework || []
     })),
-    skills: Object.entries(skills).flatMap(([category, skillList]) => 
-      Array.isArray(skillList) ? skillList.map(skill => ({
-        name: typeof skill === 'string' ? skill : skill.name || '',
-        level: typeof skill === 'object' ? skill.level || 'Intermediate' : 'Intermediate'
-      })) : []
-    ),
+    skills: {
+      technical: skills.technical || [],
+      soft: skills.soft || [],
+      languages: skills.languages || []
+    },
     projects: projects.map(project => ({
       name: project.name || '',
       description: project.description || '',
-      technologies: project.technologies || ''
+      technologies: project.technologies || [],
+      url: project.url || '',
+      github: project.github || '',
+      startDate: project.startDate || '',
+      endDate: project.endDate || '',
+      achievements: project.achievements || []
     }))
   }
 
@@ -73,8 +94,11 @@ const ResumePreview = ({ data = {}, template = 'modern-professional' }) => {
     )
   }
 
-  // If no data yet, show placeholder
-  if (!personalInfo.fullName && experience.length === 0) {
+  // Show placeholder only if absolutely no data
+  const hasAnyData = personalInfo.fullName || personalInfo.email || experience.length > 0 || education.length > 0 || projects.length > 0 || 
+    (skills.technical && skills.technical.length > 0) || (skills.soft && skills.soft.length > 0)
+  
+  if (!hasAnyData) {
     return (
       <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
         <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -110,20 +134,22 @@ const ResumePreview = ({ data = {}, template = 'modern-professional' }) => {
       </div>
       
       {/* Template Component Preview */}
-      <div className="bg-gray-100 p-4 rounded-lg overflow-hidden">
-        <div className="transform scale-75 origin-top-left">
+      <div className="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
+        <div className="w-full h-auto max-w-none" style={{ minHeight: '600px' }}>
           <TemplateComponent 
             data={transformedData}
             colors={theme}
+            className="w-full h-full"
           />
         </div>
       </div>
       
       {/* Preview Info */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-        <p className="text-xs text-blue-800">
-          📋 Live preview using selected template. Changes are reflected in real-time.
-        </p>
+        <div className="flex items-center justify-between text-xs text-blue-800">
+          <span>📋 Live preview - Changes appear automatically</span>
+          <span>Template: {template.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+        </div>
       </div>
     </div>
   )

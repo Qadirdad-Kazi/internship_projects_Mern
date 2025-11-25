@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { Eye, EyeOff, UserPlus, Loader2 } from 'lucide-react'
 import { useAuthStore } from '../../stores/authStore'
@@ -10,6 +10,14 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const { register: registerUser, isLoading } = useAuthStore()
   const navigate = useNavigate()
+  const location = useLocation()
+  
+  // Check for redirect and template parameters in URL
+  const searchParams = new URLSearchParams(location.search)
+  const redirectPath = searchParams.get('redirect') || '/dashboard'
+  const templateId = searchParams.get('template')
+  
+  const from = templateId ? `${redirectPath}?template=${templateId}` : redirectPath
   
   const {
     register,
@@ -31,7 +39,7 @@ const Register = () => {
     
     if (result.success) {
       toast.success('Account created successfully!')
-      navigate('/dashboard')
+      navigate(from, { replace: true })
     } else {
       toast.error(result.error || 'Registration failed')
     }
@@ -53,7 +61,7 @@ const Register = () => {
             <p className="mt-2 text-sm text-gray-600">
               Or{' '}
               <Link
-                to="/login"
+                to={`/login${templateId ? `?redirect=${encodeURIComponent(redirectPath)}&template=${templateId}` : ''}`}
                 className="font-medium text-primary-600 hover:text-primary-500"
               >
                 sign in to existing account

@@ -93,6 +93,12 @@ function App() {
             </ProtectedRoute>
           } />
           
+          <Route path="/resume-builder/new" element={
+            <ProtectedRoute>
+              <ResumeBuilder />
+            </ProtectedRoute>
+          } />
+          
           <Route path="/profile" element={
             <ProtectedRoute>
               <Profile />

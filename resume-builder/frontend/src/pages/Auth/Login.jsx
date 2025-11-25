@@ -11,7 +11,12 @@ const Login = () => {
   const navigate = useNavigate()
   const location = useLocation()
   
-  const from = location.state?.from?.pathname || '/dashboard'
+  // Check for redirect and template parameters in URL
+  const searchParams = new URLSearchParams(location.search)
+  const redirectPath = searchParams.get('redirect') || location.state?.from?.pathname || '/dashboard'
+  const templateId = searchParams.get('template')
+  
+  const from = templateId ? `${redirectPath}?template=${templateId}` : redirectPath
   
   const {
     register,
@@ -46,7 +51,7 @@ const Login = () => {
             <p className="mt-2 text-sm text-gray-600">
               Or{' '}
               <Link
-                to="/register"
+                to={`/register${templateId ? `?redirect=${encodeURIComponent(redirectPath)}&template=${templateId}` : ''}`}
                 className="font-medium text-primary-600 hover:text-primary-500"
               >
                 create a new account

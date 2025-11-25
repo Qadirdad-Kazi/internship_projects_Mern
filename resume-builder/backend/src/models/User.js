@@ -58,8 +58,8 @@ const userSchema = new mongoose.Schema({
   preferences: {
     defaultTemplate: {
       type: String,
-      enum: ['modern', 'classic', 'minimal', 'creative'],
-      default: 'modern'
+      enum: ['modern-professional', 'executive-classic', 'minimal-clean', 'creative-portfolio', 'tech-innovator', 'corporate-elite', 'simple-effective', 'design-studio', 'modern', 'classic', 'minimal', 'creative'],
+      default: 'modern-professional'
     },
     language: {
       type: String,

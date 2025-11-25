@@ -14,8 +14,8 @@ const resumeSchema = new mongoose.Schema({
   },
   template: {
     type: String,
-    enum: ['modern', 'classic', 'minimal', 'creative'],
-    default: 'modern'
+    enum: ['modern-professional', 'executive-classic', 'minimal-clean', 'creative-portfolio', 'tech-innovator', 'corporate-elite', 'simple-effective', 'design-studio', 'modern', 'classic', 'minimal', 'creative'],
+    default: 'modern-professional'
   },
   isDraft: {
     type: Boolean,
