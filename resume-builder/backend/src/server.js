@@ -13,6 +13,15 @@ const pdfRoutes = require('./routes/pdfRoutes');
 const app = express();
 app.set('trust proxy', 1); // Trust Vercel proxy for correct IP detection
 
+// CORS setup
+const cors = require('cors');
+app.use(cors({
+  origin: process.env.CORS_ORIGIN,
+  credentials: true,
+}));
+// Handle preflight OPTIONS requests for all routes
+app.options('*', cors());
+
 // Security middleware
 app.use(helmet());
 
