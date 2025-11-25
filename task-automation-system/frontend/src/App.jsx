@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import './styles.css'
+import Layout from './components/Layout'
+import Header from './components/Header'
+import TaskForm from './components/TaskForm'
+import TaskCard from './components/TaskCard'
+import TaskRow from './components/TaskRow'
+import Toast from './components/Toast'
 
 const api = {
   async listTasks() {
@@ -56,7 +62,7 @@ export default function App() {
           notify('Task Reminder', msg)
           setTimeout(() => setAlerts(a => a.slice(1)), 5000)
         }
-      } catch {}
+      } catch { }
     }
     return () => es.close()
   }, [])
@@ -66,7 +72,7 @@ export default function App() {
     if (!form.title || !form.dueAt) return
     const dueAtISO = new Date(form.dueAt).toISOString()
     const created = await api.addTask({ ...form, dueAt: dueAtISO })
-    setTasks(t => [...t, created].sort((a,b) => new Date(a.dueAt) - new Date(b.dueAt)))
+    setTasks(t => [...t, created].sort((a, b) => new Date(a.dueAt) - new Date(b.dueAt)))
     setForm({ title: '', description: '', assignedTo: 'intern', dueAt: '' })
   }
 
@@ -75,66 +81,29 @@ export default function App() {
     setTasks(ts => ts.map(t => t.id === task.id ? updated : t))
   }
 
-  const TaskRow = ({ task }) => (
-    <div className="task-row">
-      <input type="checkbox" checked={task.status === 'done'} onChange={() => toggleDone(task)} />
-      <div className="task-row__body">
-        <div className="task-title">{task.title}</div>
-        {task.description && <div className="task-desc small muted">{task.description}</div>}
-        <div className="task-meta small">assigned to {task.assignedTo} • due {new Date(task.dueAt).toLocaleString()}</div>
-      </div>
-    </div>
-  )
-
-  const TaskCard = ({ task }) => (
-    <div className={`task-card ${task.status === 'done' ? 'done' : ''}`}> 
-      <div className="task-card__header">
-        <input type="checkbox" checked={task.status === 'done'} onChange={() => toggleDone(task)} />
-        <h3 className="task-title">{task.title}</h3>
-      </div>
-      {task.description && <p className="task-desc">{task.description}</p>}
-      <div className="task-meta">Assigned: {task.assignedTo}</div>
-      <div className="task-meta">Due: {new Date(task.dueAt).toLocaleString()}</div>
-    </div>
-  )
-
   return (
-    <div className="app-shell">
-      <header className="app-header">
-        <h1>Task Automation System</h1>
-        <div className="view-toggle">
-          <button type="button" className={view === 'cards' ? 'active' : ''} onClick={() => setView('cards')}>Cards</button>
-          <button type="button" className={view === 'list' ? 'active' : ''} onClick={() => setView('list')}>List</button>
-        </div>
-      </header>
+    <Layout>
+      <Header view={view} setView={setView} />
 
-      <form onSubmit={onSubmit} className="task-form">
-        <input placeholder="Title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
-        <input placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
-        <select value={form.assignedTo} onChange={e => setForm({ ...form, assignedTo: e.target.value })}>
-          <option value="intern">intern</option>
-          <option value="mentor">mentor</option>
-        </select>
-        <input type="datetime-local" value={form.dueAt} onChange={e => setForm({ ...form, dueAt: e.target.value })} />
-        <button type="submit" className="primary" style={{ gridColumn: 'span 4' }}>Add Task</button>
-      </form>
+      <TaskForm form={form} setForm={setForm} onSubmit={onSubmit} />
 
       {view === 'list' && (
         <div className="task-list">
-          {tasks.map(t => <TaskRow key={t.id} task={t} />)}
-        </div>
-      )}
-      {view === 'cards' && (
-        <div className="task-grid">
-          {tasks.map(t => <TaskCard key={t.id} task={t} />)}
+          {tasks.map(t => (
+            <TaskRow key={t.id} task={t} toggleDone={toggleDone} />
+          ))}
         </div>
       )}
 
-      <div className="toast-stack">
-        {alerts.map((a, i) => (
-          <div key={i} className="toast">{a}</div>
-        ))}
-      </div>
-    </div>
+      {view === 'cards' && (
+        <div className="task-grid">
+          {tasks.map(t => (
+            <TaskCard key={t.id} task={t} toggleDone={toggleDone} />
+          ))}
+        </div>
+      )}
+
+      <Toast alerts={alerts} />
+    </Layout>
   )
 }
