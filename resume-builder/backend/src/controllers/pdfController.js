@@ -45,7 +45,12 @@ const generatePDF = async (req, res) => {
       _id: id,
       userId,
       isActive: true
-    });
+    }).lean(); // Use lean() to get plain JavaScript object without Mongoose validation
+    
+    console.log('[PDF DEBUG] Resume fetched successfully, type:', typeof resume);
+    console.log('[PDF DEBUG] Resume is Mongoose document?:', resume instanceof Resume);
+    console.log('[PDF DEBUG] Resume has _id:', !!resume?._id);
+    console.log('[PDF DEBUG] Resume experience length:', resume?.experience?.length || 0);
     
     console.log('[PDF DEBUG] Resume found:', !!resume);
     if (resume) {
@@ -60,10 +65,16 @@ const generatePDF = async (req, res) => {
         message: 'Resume not found'
       });
     }
-    
-    await ensureDirectories();
-    
-    // Generate unique filename
+
+    // Sanitize resume data for PDF generation
+    console.log('[PDF DEBUG] Sanitizing resume data for PDF generation...');
+    const sanitizedResume = sanitizeResumeForPDF(resume);
+    console.log('[PDF DEBUG] Resume sanitization completed');
+    console.log('[PDF DEBUG] Sanitized resume type:', typeof sanitizedResume);
+    console.log('[PDF DEBUG] Sanitized resume experience length:', sanitizedResume?.experience?.length || 0);
+    console.log('[PDF DEBUG] First experience startDate:', sanitizedResume?.experience?.[0]?.startDate);
+
+    await ensureDirectories();    // Generate unique filename
     const filename = `resume-${uuidv4()}.pdf`;
     const filepath = path.join(__dirname, '../../temp/pdfs', filename);
     
@@ -75,7 +86,7 @@ const generatePDF = async (req, res) => {
     let pdfBuffer;
     try {
       console.log('[PDF DEBUG] Calling createPDFBuffer...');
-      pdfBuffer = await createPDFBuffer(resume);
+      pdfBuffer = await createPDFBuffer(sanitizedResume);
       console.log('[PDF DEBUG] PDF buffer created, size:', pdfBuffer?.length);
     } catch (pdfError) {
       console.error('[PDF DEBUG] Error in createPDFBuffer:', pdfError);
@@ -85,8 +96,12 @@ const generatePDF = async (req, res) => {
     // Save PDF to file
     await fs.writeFile(filepath, pdfBuffer);
     
-    // Update resume download count
-    await resume.incrementDownloads();
+    // Update resume download count (using direct MongoDB update since resume is lean)
+    console.log('[PDF DEBUG] Incrementing download count for resume:', resume._id);
+    await Resume.findByIdAndUpdate(resume._id, { 
+      $inc: { 'metadata.totalDownloads': 1 },
+      $set: { 'metadata.lastExported': new Date() }
+    });
     
     // Set response headers for PDF download
     res.setHeader('Content-Type', 'application/pdf');
@@ -127,7 +142,7 @@ const previewPDF = async (req, res) => {
       _id: id,
       userId,
       isActive: true
-    });
+    }).lean();
     
     if (!resume) {
       return res.status(404).json({
@@ -136,8 +151,11 @@ const previewPDF = async (req, res) => {
       });
     }
     
+    // Sanitize resume data for PDF generation
+    const sanitizedResume = sanitizeResumeForPDF(resume);
+    
     // Create PDF buffer for preview (without saving to file)
-    const pdfBuffer = await createPDFBuffer(resume);
+    const pdfBuffer = await createPDFBuffer(sanitizedResume);
     
     // Set response headers for inline viewing
     res.setHeader('Content-Type', 'application/pdf');
@@ -685,6 +703,98 @@ const addCreativeSection = (doc, title, content, yPosition, xStart, color, fontS
      .text(content, xStart, yPosition, { width: doc.page.width - xStart - 50 });
   
   return yPosition + doc.heightOfString(content, { width: doc.page.width - xStart - 50 }) + 20;
+};
+
+// Sanitize resume data for PDF generation
+const sanitizeResumeForPDF = (resume) => {
+  console.log('[PDF DEBUG] Starting resume data sanitization');
+  
+  // Create a deep copy to avoid modifying original
+  const sanitized = JSON.parse(JSON.stringify(resume));
+  
+  // Ensure required structures exist
+  sanitized.personalInfo = sanitized.personalInfo || {};
+  sanitized.experience = sanitized.experience || [];
+  sanitized.education = sanitized.education || [];
+  sanitized.skills = sanitized.skills || {};
+  sanitized.projects = sanitized.projects || [];
+  sanitized.certifications = sanitized.certifications || [];
+  sanitized.settings = sanitized.settings || {};
+  sanitized.settings.theme = sanitized.settings.theme || {};
+  sanitized.settings.sections = sanitized.settings.sections || {};
+  
+  // Sanitize experience data
+  sanitized.experience = sanitized.experience.map((exp, index) => {
+    console.log(`[PDF DEBUG] Sanitizing experience ${index}:`, exp.jobTitle);
+    return {
+      jobTitle: exp.jobTitle || 'Position',
+      company: exp.company || 'Company',
+      location: exp.location || '',
+      startDate: exp.startDate || new Date().toISOString(),
+      endDate: exp.isCurrentJob ? null : (exp.endDate || new Date().toISOString()),
+      isCurrentJob: exp.isCurrentJob || false,
+      description: exp.description || '',
+      achievements: Array.isArray(exp.achievements) ? exp.achievements.filter(a => a && a.trim()) : [],
+      technologies: Array.isArray(exp.technologies) ? exp.technologies.filter(t => t && t.trim()) : []
+    };
+  });
+  
+  // Sanitize education data
+  sanitized.education = sanitized.education.map((edu, index) => {
+    console.log(`[PDF DEBUG] Sanitizing education ${index}:`, edu.degree);
+    return {
+      degree: edu.degree || 'Degree',
+      institution: edu.institution || 'Institution',
+      location: edu.location || '',
+      startDate: edu.startDate || new Date().toISOString(),
+      endDate: edu.isCurrentlyEnrolled ? null : (edu.endDate || new Date().toISOString()),
+      isCurrentlyEnrolled: edu.isCurrentlyEnrolled || false,
+      gpa: edu.gpa || '',
+      honors: Array.isArray(edu.honors) ? edu.honors.filter(h => h && h.trim()) : [],
+      relevantCoursework: Array.isArray(edu.relevantCoursework) ? edu.relevantCoursework.filter(c => c && c.trim()) : []
+    };
+  });
+  
+  // Sanitize projects data
+  sanitized.projects = sanitized.projects.map((project, index) => {
+    console.log(`[PDF DEBUG] Sanitizing project ${index}:`, project.name);
+    return {
+      name: project.name || 'Project',
+      description: project.description || '',
+      technologies: Array.isArray(project.technologies) ? project.technologies.filter(t => t && t.trim()) : [],
+      url: project.url || '',
+      github: project.github || '',
+      startDate: project.startDate || null,
+      endDate: project.isOngoing ? null : project.endDate || null,
+      isOngoing: project.isOngoing || false,
+      achievements: Array.isArray(project.achievements) ? project.achievements.filter(a => a && a.trim()) : []
+    };
+  });
+  
+  // Ensure skills structure
+  sanitized.skills.technical = Array.isArray(sanitized.skills.technical) ? sanitized.skills.technical : [];
+  sanitized.skills.soft = Array.isArray(sanitized.skills.soft) ? sanitized.skills.soft : [];
+  sanitized.skills.languages = Array.isArray(sanitized.skills.languages) ? sanitized.skills.languages : [];
+  
+  // Set default theme values
+  sanitized.settings.theme.primaryColor = sanitized.settings.theme.primaryColor || '#2563eb';
+  sanitized.settings.theme.secondaryColor = sanitized.settings.theme.secondaryColor || '#64748b';
+  sanitized.settings.theme.fontSize = sanitized.settings.theme.fontSize || 12;
+  
+  // Set default section visibility
+  const defaultSections = {
+    showProfilePicture: true,
+    showProfessionalSummary: true,
+    showExperience: true,
+    showEducation: true,
+    showSkills: true,
+    showProjects: true,
+    showCertifications: true
+  };
+  sanitized.settings.sections = { ...defaultSections, ...sanitized.settings.sections };
+  
+  console.log('[PDF DEBUG] Resume sanitization completed successfully');
+  return sanitized;
 };
 
 module.exports = {

@@ -231,7 +231,7 @@ const validateOwnership = (resourceType) => {
       switch (resourceType) {
         case 'resume':
           const Resume = require('../models/Resume');
-          resource = await Resume.findById(resourceId);
+          resource = await Resume.findById(resourceId).lean();
           break;
         default:
           return res.status(400).json({
