@@ -19,11 +19,20 @@ const ensureDirectories = async () => {
 
 const generatePDF = async (req, res) => {
   try {
+    console.log('[PDF DEBUG] PDF generation request received for ID:', req.params.id);
+    console.log('[PDF DEBUG] User ID:', req.user._id);
+    console.log('[PDF DEBUG] User subscription:', req.user.subscription);
+    
     const { id } = req.params;
     const userId = req.user._id;
     
     // Check if user can export PDF
-    if (!req.user.canExportPDF()) {
+    console.log('[PDF DEBUG] Checking PDF export permissions...');
+    const canExport = req.user.canExportPDF();
+    console.log('[PDF DEBUG] Can export PDF:', canExport);
+    
+    if (!canExport) {
+      console.log('[PDF DEBUG] PDF export denied - limit reached');
       return res.status(403).json({
         status: 'error',
         message: 'PDF export limit reached for your subscription plan',
@@ -31,13 +40,21 @@ const generatePDF = async (req, res) => {
       });
     }
     
+    console.log('[PDF DEBUG] Looking for resume with ID:', id, 'and userId:', userId);
     const resume = await Resume.findOne({
       _id: id,
       userId,
       isActive: true
     });
     
+    console.log('[PDF DEBUG] Resume found:', !!resume);
+    if (resume) {
+      console.log('[PDF DEBUG] Resume title:', resume.title);
+      console.log('[PDF DEBUG] Resume template:', resume.template);
+    }
+    
     if (!resume) {
+      console.log('[PDF DEBUG] Resume not found - returning 404');
       return res.status(404).json({
         status: 'error',
         message: 'Resume not found'
@@ -50,8 +67,20 @@ const generatePDF = async (req, res) => {
     const filename = `resume-${uuidv4()}.pdf`;
     const filepath = path.join(__dirname, '../../temp/pdfs', filename);
     
+    console.log('[PDF DEBUG] Starting PDF generation...');
+    console.log('[PDF DEBUG] Filename:', filename);
+    console.log('[PDF DEBUG] Filepath:', filepath);
+    
     // Create PDF based on template
-    const pdfBuffer = await createPDFBuffer(resume);
+    let pdfBuffer;
+    try {
+      console.log('[PDF DEBUG] Calling createPDFBuffer...');
+      pdfBuffer = await createPDFBuffer(resume);
+      console.log('[PDF DEBUG] PDF buffer created, size:', pdfBuffer?.length);
+    } catch (pdfError) {
+      console.error('[PDF DEBUG] Error in createPDFBuffer:', pdfError);
+      throw pdfError;
+    }
     
     // Save PDF to file
     await fs.writeFile(filepath, pdfBuffer);
@@ -77,11 +106,14 @@ const generatePDF = async (req, res) => {
     }, 60000); // Delete after 1 minute
     
   } catch (error) {
-    console.error('Generate PDF error:', error);
+    console.error('[PDF DEBUG] Generate PDF error:', error);
+    console.error('[PDF DEBUG] Error message:', error.message);
+    console.error('[PDF DEBUG] Error stack:', error.stack);
+    
     res.status(500).json({
       status: 'error',
-      message: 'Failed to generate PDF',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: error.message || 'Failed to generate PDF',
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };
@@ -140,20 +172,41 @@ const createPDFBuffer = async (resume) => {
       doc.on('error', reject);
       
       // Generate PDF based on template
-      switch (resume.template) {
+      console.log('[PDF DEBUG] Resume template:', resume.template);
+      
+      // Map frontend template names to backend generators
+      let templateName = resume.template;
+      if (templateName.includes('modern') || templateName.includes('professional')) {
+        templateName = 'modern';
+      } else if (templateName.includes('classic') || templateName.includes('executive')) {
+        templateName = 'classic';
+      } else if (templateName.includes('minimal') || templateName.includes('clean') || templateName.includes('simple')) {
+        templateName = 'minimal';
+      } else if (templateName.includes('creative') || templateName.includes('portfolio') || templateName.includes('design')) {
+        templateName = 'creative';
+      }
+      
+      console.log('[PDF DEBUG] Mapped template name:', templateName);
+      
+      switch (templateName) {
         case 'modern':
+          console.log('[PDF DEBUG] Using modern template generator');
           generateModernTemplate(doc, resume);
           break;
         case 'classic':
+          console.log('[PDF DEBUG] Using classic template generator');
           generateClassicTemplate(doc, resume);
           break;
         case 'minimal':
+          console.log('[PDF DEBUG] Using minimal template generator');
           generateMinimalTemplate(doc, resume);
           break;
         case 'creative':
+          console.log('[PDF DEBUG] Using creative template generator');
           generateCreativeTemplate(doc, resume);
           break;
         default:
+          console.log('[PDF DEBUG] Using default (modern) template generator');
           generateModernTemplate(doc, resume);
       }
       
@@ -166,10 +219,17 @@ const createPDFBuffer = async (resume) => {
 };
 
 const generateModernTemplate = (doc, resume) => {
-  const { personalInfo, experience, education, skills, projects, certifications } = resume;
-  const { theme } = resume.settings;
-  const primaryColor = theme.primaryColor || '#2563eb';
-  const fontSize = theme.fontSize || 12;
+  try {
+    console.log('[PDF DEBUG] Starting modern template generation');
+    console.log('[PDF DEBUG] Resume object keys:', Object.keys(resume));
+    console.log('[PDF DEBUG] Personal info:', resume.personalInfo);
+    console.log('[PDF DEBUG] Settings:', resume.settings);
+    
+    const { personalInfo = {}, experience = [], education = [], skills = {}, projects = [], certifications = [] } = resume;
+    const settings = resume.settings || {};
+    const theme = settings.theme || {};
+    const primaryColor = theme.primaryColor || '#2563eb';
+    const fontSize = theme.fontSize || 12;
   
   let yPosition = 70;
   
@@ -241,6 +301,14 @@ const generateModernTemplate = (doc, resume) => {
     certifications.forEach(cert => {
       yPosition = addCertificationEntry(doc, cert, yPosition, fontSize);
     });
+  }
+  
+  console.log('[PDF DEBUG] Modern template generation completed successfully');
+  
+  } catch (error) {
+    console.error('[PDF DEBUG] Error in generateModernTemplate:', error);
+    console.error('[PDF DEBUG] Error stack:', error.stack);
+    throw new Error(`PDF generation failed: ${error.message}`);
   }
 };
 

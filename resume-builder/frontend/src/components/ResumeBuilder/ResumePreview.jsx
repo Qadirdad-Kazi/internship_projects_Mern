@@ -18,14 +18,19 @@ const ResumePreview = ({ data = {}, template = 'modern-professional', resumeId =
 
   // PDF export handler
   const handleExportPDF = async () => {
+    console.log('[PDF DEBUG] Starting PDF export for resume ID:', resumeId)
+    
     if (!resumeId || resumeId === 'new') {
+      console.log('[PDF DEBUG] Invalid resume ID, cannot export')
       toast.error('Please save your resume first before exporting to PDF')
       return
     }
 
     try {
+      console.log('[PDF DEBUG] Making API call to generate PDF...')
       toast.loading('Generating PDF...', { id: 'pdf-export' })
       const response = await pdfAPI.generatePDF(resumeId)
+      console.log('[PDF DEBUG] PDF API response:', response)
       const blob = new Blob([response.data], { type: 'application/pdf' })
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -38,7 +43,36 @@ const ResumePreview = ({ data = {}, template = 'modern-professional', resumeId =
       toast.success('PDF exported successfully!', { id: 'pdf-export' })
     } catch (error) {
       console.error('PDF export error:', error)
-      toast.error('Failed to export PDF. Please try again.', { id: 'pdf-export' })
+      console.error('Error response:', error.response)
+      console.error('Error status:', error.response?.status)
+      console.error('Error data:', error.response?.data)
+      
+      let errorMessage = 'Failed to export PDF. Please try again.'
+      
+      // Handle Blob error responses (JSON error messages)
+      if (error.response?.data instanceof Blob && error.response.data.type.includes('json')) {
+        try {
+          const errorText = await error.response.data.text()
+          console.log('[PDF DEBUG] Blob error content:', errorText)
+          const errorData = JSON.parse(errorText)
+          console.log('[PDF DEBUG] Parsed error data:', errorData)
+          errorMessage = errorData.message || errorMessage
+        } catch (blobError) {
+          console.error('[PDF DEBUG] Failed to parse blob error:', blobError)
+        }
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Please log in again to export PDF.'
+      } else if (error.response?.status === 403) {
+        errorMessage = error.response?.data?.message || 'PDF export not allowed.'
+      } else if (error.response?.status === 404) {
+        errorMessage = 'Resume not found. Please save your resume first.'
+      } else if (error.response?.status === 429) {
+        errorMessage = 'Too many PDF export requests. Please wait a moment.'
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message
+      }
+      
+      toast.error(errorMessage, { id: 'pdf-export' })
     }
   }
   
