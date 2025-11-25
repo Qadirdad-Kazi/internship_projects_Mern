@@ -42,6 +42,9 @@ const ResumePreview = ({ data = {}, template = 'modern-professional', resumeId =
     }
   }
   
+  // Debug logging for skills
+  console.log('[PREVIEW DEBUG] Original skills data:', skills)
+  
   // Transform data to match template component format
   const transformedData = {
     personalInfo: {
@@ -86,11 +89,26 @@ const ResumePreview = ({ data = {}, template = 'modern-professional', resumeId =
       honors: edu.honors || [],
       relevantCoursework: edu.relevantCoursework || []
     })),
-    skills: {
-      technical: skills.technical || [],
-      soft: skills.soft || [],
-      languages: skills.languages || []
-    },
+    skills: [
+      // Transform technical skills
+      ...(skills.technical || []).map(skill => ({
+        name: typeof skill === 'string' ? skill : skill.name || '',
+        level: typeof skill === 'object' ? skill.level || 'Intermediate' : 'Intermediate',
+        category: 'Technical'
+      })),
+      // Transform soft skills  
+      ...(skills.soft || []).map(skill => ({
+        name: skill,
+        level: 'Intermediate', // Default level for soft skills
+        category: 'Soft Skills'
+      })),
+      // Transform languages
+      ...(skills.languages || []).map(lang => ({
+        name: typeof lang === 'string' ? lang : lang.language || '',
+        level: typeof lang === 'object' ? lang.proficiency || 'Conversational' : 'Conversational',
+        category: 'Languages'
+      }))
+    ],
     projects: projects.map(project => ({
       name: project.name || '',
       description: project.description || '',
@@ -102,6 +120,9 @@ const ResumePreview = ({ data = {}, template = 'modern-professional', resumeId =
       achievements: project.achievements || []
     }))
   }
+  
+  // Debug logging for transformed skills
+  console.log('[PREVIEW DEBUG] Transformed skills for template:', transformedData.skills)
 
   const theme = {
     primary: settings.theme?.primaryColor || '#2563eb',
@@ -124,7 +145,7 @@ const ResumePreview = ({ data = {}, template = 'modern-professional', resumeId =
 
   // Show placeholder only if absolutely no data
   const hasAnyData = personalInfo.fullName || personalInfo.email || experience.length > 0 || education.length > 0 || projects.length > 0 || 
-    (skills.technical && skills.technical.length > 0) || (skills.soft && skills.soft.length > 0)
+    (skills.technical && skills.technical.length > 0) || (skills.soft && skills.soft.length > 0) || (skills.languages && skills.languages.length > 0)
   
   if (!hasAnyData) {
     return (

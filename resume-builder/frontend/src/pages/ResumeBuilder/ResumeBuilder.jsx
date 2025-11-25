@@ -54,6 +54,12 @@ const ResumeBuilder = () => {
     
     // Clean experience dates and arrays (preserve structure)
     if (cleaned.experience) {
+      console.log('[DEBUGGING] Cleaning Experience Data:', {
+        originalExperience: cleaned.experience,
+        experienceCount: cleaned.experience.length,
+        locationFields: cleaned.experience.map((exp, i) => ({ index: i, location: exp.location }))
+      })
+      
       cleaned.experience = cleaned.experience.map(exp => ({
         ...exp,
         startDate: exp.startDate ? new Date(exp.startDate).toISOString() : null,
@@ -61,6 +67,12 @@ const ResumeBuilder = () => {
         achievements: exp.achievements ? exp.achievements.filter(item => item && item.trim()) : [],
         technologies: exp.technologies ? exp.technologies.filter(item => item && item.trim()) : []
       }))
+      
+      console.log('[DEBUGGING] Cleaned Experience Data:', {
+        cleanedExperience: cleaned.experience,
+        cleanedExperienceCount: cleaned.experience.length,
+        cleanedLocationFields: cleaned.experience.map((exp, i) => ({ index: i, location: exp.location }))
+      })
     } else {
       // Preserve empty array structure
       cleaned.experience = []
@@ -77,6 +89,11 @@ const ResumeBuilder = () => {
     
     // Clean projects
     if (cleaned.projects) {
+      console.log('[DEBUGGING] Cleaning Projects Data:', {
+        originalProjects: cleaned.projects,
+        projectsCount: cleaned.projects.length
+      })
+      
       cleaned.projects = cleaned.projects.map(project => ({
         ...project,
         startDate: project.startDate ? new Date(project.startDate).toISOString() : null,
@@ -87,16 +104,35 @@ const ResumeBuilder = () => {
           (project.technologies ? project.technologies.split(',').map(t => t.trim()).filter(t => t) : []),
         achievements: project.achievements ? project.achievements.filter(item => item && item.trim()) : []
       }))
+      
+      console.log('[DEBUGGING] Cleaned Projects Data:', {
+        cleanedProjects: cleaned.projects,
+        cleanedProjectsCount: cleaned.projects.length
+      })
     }
     
     // Clean skills arrays
     if (cleaned.skills) {
+      console.log('[DEBUGGING] Cleaning Skills Data:', {
+        originalSkills: cleaned.skills,
+        technicalCount: cleaned.skills.technical?.length || 0,
+        softCount: cleaned.skills.soft?.length || 0,
+        languagesCount: cleaned.skills.languages?.length || 0
+      })
+      
       if (cleaned.skills.soft) {
         cleaned.skills.soft = cleaned.skills.soft.filter(skill => skill && skill.trim())
       }
       if (cleaned.skills.technical) {
         cleaned.skills.technical = cleaned.skills.technical.filter(skill => skill && skill.name && skill.name.trim())
       }
+      
+      console.log('[DEBUGGING] Cleaned Skills Data:', {
+        cleanedSkills: cleaned.skills,
+        cleanedTechnicalCount: cleaned.skills.technical?.length || 0,
+        cleanedSoftCount: cleaned.skills.soft?.length || 0,
+        cleanedLanguagesCount: cleaned.skills.languages?.length || 0
+      })
     }
     
     // Clean education arrays
@@ -275,7 +311,14 @@ const ResumeBuilder = () => {
       console.log('Experience data:', resumeData.experience)
       console.log('Education data:', resumeData.education)
       console.log('Skills data:', resumeData.skills)
-      console.log('Projects data:', resumeData.projects)
+      console.log('[PROJECTS LOADING DEBUG] Projects data from backend:', resumeData.projects)
+      console.log('[PROJECTS LOADING DEBUG] Projects count:', resumeData.projects?.length || 0)
+      console.log('[PROJECTS LOADING DEBUG] Individual projects:', resumeData.projects?.map((project, i) => ({
+        index: i,
+        name: project.name,
+        description: project.description?.substring(0, 50) + '...',
+        technologiesCount: project.technologies?.length || 0
+      })))
       
       if (!resumeData) {
         throw new Error('Invalid response structure')
@@ -311,6 +354,9 @@ const ResumeBuilder = () => {
       console.log('PersonalInfo loaded from backend:', resumeData.personalInfo)
       console.log('PersonalInfo after structuring:', structuredData.personalInfo)
       
+      console.log('[PROJECTS LOADING DEBUG] Structured projects data:', structuredData.projects)
+      console.log('[PROJECTS LOADING DEBUG] Structured projects count:', structuredData.projects?.length || 0)
+      
       console.log('Setting structured data:', structuredData)
       setResumeData(structuredData)
       setLastSaved(new Date())
@@ -321,7 +367,12 @@ const ResumeBuilder = () => {
         console.log('Experience:', structuredData.experience)
         console.log('Education:', structuredData.education) 
         console.log('Skills:', structuredData.skills)
-        console.log('Projects:', structuredData.projects)
+        console.log('[PROJECTS LOADING DEBUG] Projects after state setting:', structuredData.projects)
+        console.log('[PROJECTS LOADING DEBUG] Projects state verification:', {
+          projectsLength: structuredData.projects?.length || 0,
+          firstProject: structuredData.projects?.[0] || 'No projects',
+          hasProjects: !!(structuredData.projects && structuredData.projects.length > 0)
+        })
       }, 100)
     } catch (error) {
       console.error('Error loading resume:', error)
@@ -457,7 +508,13 @@ const ResumeBuilder = () => {
       console.log('Experience being saved:', dataToSave.experience)
       console.log('Education being saved:', dataToSave.education)
       console.log('Skills being saved:', dataToSave.skills)
-      console.log('Projects being saved:', dataToSave.projects)
+      console.log('[PROJECTS SAVE DEBUG] Projects being saved:', dataToSave.projects)
+      console.log('[PROJECTS SAVE DEBUG] Projects save count:', dataToSave.projects?.length || 0)
+      console.log('[PROJECTS SAVE DEBUG] Projects save structure:', {
+        isArray: Array.isArray(dataToSave.projects),
+        hasProjects: !!(dataToSave.projects && dataToSave.projects.length > 0),
+        projectNames: dataToSave.projects?.map(p => p.name) || []
+      })
       
       let response
       if (id && id !== 'new') {
@@ -499,7 +556,13 @@ const ResumeBuilder = () => {
             console.log('Reloaded experience:', reloadedData.experience)
             console.log('Reloaded education:', reloadedData.education)
             console.log('Reloaded skills:', reloadedData.skills)
-            console.log('Reloaded projects:', reloadedData.projects)
+            console.log('[FORCE RELOAD DEBUG] Reloaded projects from backend:', reloadedData.projects)
+            console.log('[FORCE RELOAD DEBUG] Reloaded projects count:', reloadedData.projects?.length || 0)
+            console.log('[FORCE RELOAD DEBUG] Projects structure check:', {
+              isArray: Array.isArray(reloadedData.projects),
+              hasProjects: !!(reloadedData.projects && reloadedData.projects.length > 0),
+              firstProject: reloadedData.projects?.[0] || 'No projects found'
+            })
             
             // Ensure proper structure with fallbacks
             const structuredData = {
@@ -528,6 +591,8 @@ const ResumeBuilder = () => {
               customSections: reloadedData.customSections || []
             }
             
+            console.log('[FORCE RELOAD DEBUG] Final structured projects:', structuredData.projects)
+            console.log('[FORCE RELOAD DEBUG] Final projects count:', structuredData.projects?.length || 0)
             console.log('Setting reloaded structured data:', structuredData)
             setResumeData(structuredData)
             setLastSaved(new Date())
@@ -723,6 +788,12 @@ const ResumeBuilder = () => {
           />
         )
       case 'projects':
+        console.log('[PROJECTS RENDER DEBUG] Rendering ProjectsForm with data:', {
+          projects: resumeData.projects,
+          projectsLength: resumeData.projects?.length || 0,
+          hasProjectsData: !!(resumeData.projects && resumeData.projects.length > 0),
+          firstProject: resumeData.projects?.[0] || 'No first project'
+        })
         return (
           <ProjectsForm 
             data={resumeData.projects || []}

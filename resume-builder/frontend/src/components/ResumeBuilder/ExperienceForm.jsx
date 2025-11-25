@@ -7,8 +7,15 @@ const ExperienceForm = ({ data = [], onChange, errors = {} }) => {
   
   // Debug logging
   useEffect(() => {
-    console.log('ExperienceForm received data:', data)
-    console.log('Data length:', data.length)
+    console.log('[EXPERIENCE DEBUG] ExperienceForm received data:', data)
+    console.log('[EXPERIENCE DEBUG] Experience data length:', data.length)
+    console.log('[EXPERIENCE DEBUG] Experience locations:', data.map((exp, i) => ({ 
+      index: i, 
+      jobTitle: exp.jobTitle, 
+      company: exp.company,
+      location: exp.location,
+      hasLocation: !!exp.location 
+    })))
   }, [data])
 
   const addExperience = () => {
@@ -57,12 +64,23 @@ const ExperienceForm = ({ data = [], onChange, errors = {} }) => {
   }
 
   const updateExperience = (index, field, value) => {
+    console.log('[EXPERIENCE DEBUG] Updating experience:', { index, field, value })
     const newData = [...data]
     
     if (field === 'isCurrentJob' && value) {
       newData[index] = { ...newData[index], [field]: value, endDate: null }
     } else {
       newData[index] = { ...newData[index], [field]: value }
+    }
+    
+    console.log('[EXPERIENCE DEBUG] Updated experience data:', newData)
+    if (field === 'location') {
+      console.log('[EXPERIENCE DEBUG] Location update specifically:', {
+        index,
+        oldLocation: data[index]?.location,
+        newLocation: value,
+        updatedLocation: newData[index].location
+      })
     }
     
     onChange({

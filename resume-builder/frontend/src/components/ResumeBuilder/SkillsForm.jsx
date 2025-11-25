@@ -7,10 +7,15 @@ const SkillsForm = ({ data = {}, onChange, errors = {} }) => {
   
   // Debug logging
   useEffect(() => {
-    console.log('SkillsForm received data:', data)
-    console.log('Technical skills:', data.technical)
-    console.log('Soft skills:', data.soft)
-    console.log('Languages:', data.languages)
+    console.log('[SKILLS DEBUG] SkillsForm received data:', data)
+    console.log('[SKILLS DEBUG] Technical skills:', data.technical)
+    console.log('[SKILLS DEBUG] Soft skills:', data.soft)
+    console.log('[SKILLS DEBUG] Languages:', data.languages)
+    console.log('[SKILLS DEBUG] Skills counts:', {
+      technical: data.technical?.length || 0,
+      soft: data.soft?.length || 0,
+      languages: data.languages?.length || 0
+    })
   }, [data])
 
   const skillLevels = [
@@ -44,7 +49,9 @@ const SkillsForm = ({ data = {}, onChange, errors = {} }) => {
   }
 
   const updateSkills = (section, newData) => {
+    console.log('[SKILLS DEBUG] Updating skills section:', { section, newData })
     const updatedSkills = { ...skills, [section]: newData }
+    console.log('[SKILLS DEBUG] Updated skills data:', updatedSkills)
     onChange({
       target: {
         name: 'skills',
@@ -55,6 +62,7 @@ const SkillsForm = ({ data = {}, onChange, errors = {} }) => {
 
   // Technical Skills Functions
   const addTechnicalSkill = () => {
+    console.log('[SKILLS DEBUG] Adding technical skill')
     const newSkill = {
       name: '',
       level: 'intermediate',
@@ -64,6 +72,7 @@ const SkillsForm = ({ data = {}, onChange, errors = {} }) => {
   }
 
   const updateTechnicalSkill = (index, field, value) => {
+    console.log('[SKILLS DEBUG] Updating technical skill:', { index, field, value })
     const newTechnical = [...skills.technical]
     newTechnical[index] = { ...newTechnical[index], [field]: value }
     updateSkills('technical', newTechnical)
@@ -76,10 +85,12 @@ const SkillsForm = ({ data = {}, onChange, errors = {} }) => {
 
   // Soft Skills Functions
   const addSoftSkill = () => {
+    console.log('[SKILLS DEBUG] Adding soft skill')
     updateSkills('soft', [...skills.soft, ''])
   }
 
   const updateSoftSkill = (index, value) => {
+    console.log('[SKILLS DEBUG] Updating soft skill:', { index, value })
     const newSoft = [...skills.soft]
     newSoft[index] = value
     updateSkills('soft', newSoft)

@@ -7,11 +7,19 @@ const ProjectsForm = ({ data = [], onChange, errors = {} }) => {
   
   // Debug logging
   useEffect(() => {
-    console.log('ProjectsForm received data:', data)
-    console.log('Projects data length:', data.length)
+    console.log('[PROJECTS DEBUG] ProjectsForm received data:', data)
+    console.log('[PROJECTS DEBUG] Projects data:', data)
+    console.log('[PROJECTS DEBUG] Projects count:', data.length)
+    console.log('[PROJECTS DEBUG] Individual projects:', data.map((project, index) => ({
+      index,
+      name: project.name,
+      technologiesCount: project.technologies?.length || 0,
+      achievementsCount: project.achievements?.length || 0
+    })))
   }, [data])
 
   const addProject = () => {
+    console.log('[PROJECTS DEBUG] Adding new project')
     const newProject = {
       name: '',
       description: '',
@@ -25,6 +33,7 @@ const ProjectsForm = ({ data = [], onChange, errors = {} }) => {
     }
     
     const newData = [...data, newProject]
+    console.log('[PROJECTS DEBUG] New projects data after add:', newData)
     onChange({
       target: {
         name: 'projects',
@@ -57,6 +66,7 @@ const ProjectsForm = ({ data = [], onChange, errors = {} }) => {
   }
 
   const updateProject = (index, field, value) => {
+    console.log('[PROJECTS DEBUG] Updating project:', { index, field, value })
     const newData = [...data]
     
     if (field === 'isOngoing' && value) {
@@ -65,6 +75,7 @@ const ProjectsForm = ({ data = [], onChange, errors = {} }) => {
       newData[index] = { ...newData[index], [field]: value }
     }
     
+    console.log('[PROJECTS DEBUG] Updated project data:', newData)
     onChange({
       target: {
         name: 'projects',
@@ -74,11 +85,13 @@ const ProjectsForm = ({ data = [], onChange, errors = {} }) => {
   }
 
   const updateArrayField = (projIndex, field, itemIndex, value) => {
+    console.log('[PROJECTS DEBUG] Updating array field:', { projIndex, field, itemIndex, value })
     const newData = [...data]
     const newArray = [...newData[projIndex][field]]
     newArray[itemIndex] = value
     newData[projIndex] = { ...newData[projIndex], [field]: newArray }
     
+    console.log('[PROJECTS DEBUG] Updated array field data:', newData)
     onChange({
       target: {
         name: 'projects',
