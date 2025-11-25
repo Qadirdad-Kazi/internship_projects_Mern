@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const resumeController = require('../controllers/resumeController');
 const { authMiddleware, optionalAuth, validateOwnership, rateLimitByUser, rateLimitByUserFast } = require('../middleware/auth');
-const { validateRequest, validateQuery, schemas } = require('../middleware/validation');
+const { validateRequest, validateQuery, validateResumeUpdate, schemas } = require('../middleware/validation');
 
 /**
  * @route   POST /api/v1/resumes
@@ -47,7 +47,7 @@ router.put('/:id',
   authMiddleware,
   validateOwnership('resume'),
   rateLimitByUserFast(6, 60 * 1000), // 6 updates per minute
-  validateRequest(schemas.updateResume),
+  validateResumeUpdate,
   resumeController.updateResume
 );
 
