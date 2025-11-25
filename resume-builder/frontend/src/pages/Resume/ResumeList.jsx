@@ -1,15 +1,64 @@
 import { useState } from 'react'
 import { FileText, Plus, Filter, Search, Grid, List, Eye, Download, Edit, Trash2, Calendar, Clock } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useQuery } from 'react-query'
+import { useQuery, useMutation, useQueryClient } from 'react-query'
 import { resumeAPI } from '../../services/api'
 import { useAuthStore } from '../../stores/authStore'
+import { useCache } from '../../components/Cache/CacheProvider'
+import toast from 'react-hot-toast'
 
 const ResumeList = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedTemplate, setSelectedTemplate] = useState('')
   const [viewMode, setViewMode] = useState('grid')
   const { user } = useAuthStore()
+  const queryClient = useQueryClient()
+  const { invalidateResumeCache } = useCache()
+
+  // Delete mutation
+  const deleteMutation = useMutation(resumeAPI.deleteResume, {
+    onMutate: async (deletedResumeId) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['resumes'] })
+      
+      // Snapshot the previous value
+      const previousResumes = queryClient.getQueryData(['resumes', searchTerm, selectedTemplate])
+      
+      // Optimistically update to remove the deleted resume
+      queryClient.setQueryData(['resumes', searchTerm, selectedTemplate], (old) => {
+        if (!old?.data?.data?.resumes) return old
+        return {
+          ...old,
+          data: {
+            ...old.data,
+            data: {
+              ...old.data.data,
+              resumes: old.data.data.resumes.filter(resume => resume._id !== deletedResumeId),
+              total: (old.data.data.total || 0) - 1
+            }
+          }
+        }
+      })
+      
+      return { previousResumes }
+    },
+    onSuccess: (data, variables) => {
+      // Invalidate all resume queries to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: ['resumes'], exact: false })
+      // Also invalidate API cache
+      resumeAPI.invalidateResume(variables)
+      // Clear resume cache
+      invalidateResumeCache(variables)
+      toast.success('Resume deleted successfully!')
+    },
+    onError: (error, variables, context) => {
+      // Rollback on error
+      if (context?.previousResumes) {
+        queryClient.setQueryData(['resumes', searchTerm, selectedTemplate], context.previousResumes)
+      }
+      toast.error(error.response?.data?.message || 'Failed to delete resume')
+    }
+  })
 
   // Fetch resumes
   const { data: resumesData, isLoading, error, refetch } = useQuery(
@@ -44,6 +93,17 @@ const ResumeList = () => {
       day: 'numeric'
     })
   }
+
+  const handleDeleteResume = async (resumeId, resumeTitle) => {
+    if (window.confirm(`Are you sure you want to delete "${resumeTitle}"? This action cannot be undone.`)) {
+      try {
+        await deleteMutation.mutateAsync(resumeId)
+      } catch (error) {
+        // Error handled by mutation
+      }
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -144,13 +204,23 @@ const ResumeList = () => {
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {resumes.map((resume) => (
-                <ResumeCard key={resume._id} resume={resume} />
+                <ResumeCard 
+                  key={resume._id} 
+                  resume={resume} 
+                  onDelete={handleDeleteResume}
+                  isDeleting={deleteMutation.isLoading}
+                />
               ))}
             </div>
           ) : (
             <div className="space-y-4">
               {resumes.map((resume) => (
-                <ResumeListItem key={resume._id} resume={resume} />
+                <ResumeListItem 
+                  key={resume._id} 
+                  resume={resume} 
+                  onDelete={handleDeleteResume}
+                  isDeleting={deleteMutation.isLoading}
+                />
               ))}
             </div>
           )}
@@ -181,7 +251,7 @@ const ResumeList = () => {
 }
 
 // Resume Card Component for Grid View
-const ResumeCard = ({ resume }) => {
+const ResumeCard = ({ resume, onDelete, isDeleting }) => {
   const getTemplateColor = (template) => {
     const colors = {
       'modern-professional': 'bg-blue-100 text-blue-800',
@@ -249,7 +319,11 @@ const ResumeCard = ({ resume }) => {
             <Eye className="h-3 w-3" />
           </Link>
           
-          <button className="btn-outline text-xs py-1.5 px-2 text-red-600 border-red-200 hover:bg-red-50">
+          <button 
+            onClick={() => onDelete(resume._id, resume.title)}
+            disabled={isDeleting}
+            className="btn-outline text-xs py-1.5 px-2 text-red-600 border-red-200 hover:bg-red-50 disabled:opacity-50"
+          >
             <Trash2 className="h-3 w-3" />
           </button>
         </div>
@@ -259,7 +333,7 @@ const ResumeCard = ({ resume }) => {
 }
 
 // Resume List Item Component for List View
-const ResumeListItem = ({ resume }) => {
+const ResumeListItem = ({ resume, onDelete, isDeleting }) => {
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -306,7 +380,11 @@ const ResumeListItem = ({ resume }) => {
           View
         </Link>
         
-        <button className="btn-outline text-sm text-red-600 border-red-200 hover:bg-red-50">
+        <button 
+          onClick={() => onDelete(resume._id, resume.title)}
+          disabled={isDeleting}
+          className="btn-outline text-sm text-red-600 border-red-200 hover:bg-red-50 disabled:opacity-50"
+        >
           <Trash2 className="h-4 w-4" />
         </button>
       </div>

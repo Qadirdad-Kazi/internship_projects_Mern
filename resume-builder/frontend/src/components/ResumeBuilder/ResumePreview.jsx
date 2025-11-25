@@ -1,7 +1,9 @@
 import { FileText, Download, Eye, ExternalLink } from 'lucide-react'
 import { templateRegistry } from '../Templates/index'
+import { pdfAPI } from '../../services/api'
+import toast from 'react-hot-toast'
 
-const ResumePreview = ({ data = {}, template = 'modern-professional' }) => {
+const ResumePreview = ({ data = {}, template = 'modern-professional', resumeId = null, onFullView = null }) => {
   const {
     personalInfo = {},
     experience = [],
@@ -13,6 +15,32 @@ const ResumePreview = ({ data = {}, template = 'modern-professional' }) => {
 
   // Get the template component
   const TemplateComponent = templateRegistry[template]
+
+  // PDF export handler
+  const handleExportPDF = async () => {
+    if (!resumeId || resumeId === 'new') {
+      toast.error('Please save your resume first before exporting to PDF')
+      return
+    }
+
+    try {
+      toast.loading('Generating PDF...', { id: 'pdf-export' })
+      const response = await pdfAPI.generatePDF(resumeId)
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${data.title || 'resume'}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      toast.success('PDF exported successfully!', { id: 'pdf-export' })
+    } catch (error) {
+      console.error('PDF export error:', error)
+      toast.error('Failed to export PDF. Please try again.', { id: 'pdf-export' })
+    }
+  }
   
   // Transform data to match template component format
   const transformedData = {
@@ -122,11 +150,19 @@ const ResumePreview = ({ data = {}, template = 'modern-professional' }) => {
           Live Preview - {template.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
         </h3>
         <div className="flex space-x-2">
-          <button className="btn-sm btn-secondary flex items-center">
+          <button 
+            className="btn-sm btn-secondary flex items-center"
+            onClick={onFullView}
+            disabled={!onFullView}
+          >
             <ExternalLink className="h-4 w-4 mr-1" />
             Full View
           </button>
-          <button className="btn-sm btn-primary flex items-center">
+          <button 
+            className="btn-sm btn-primary flex items-center"
+            onClick={handleExportPDF}
+            disabled={!resumeId || resumeId === 'new'}
+          >
             <Download className="h-4 w-4 mr-1" />
             Export PDF
           </button>

@@ -15,7 +15,7 @@ import {
   Copy,
   CheckCircle
 } from 'lucide-react'
-import { resumeAPI } from '../../services/api'
+import { resumeAPI, pdfAPI } from '../../services/api'
 import { templateRegistry } from '../../components/Templates/index'
 import toast from 'react-hot-toast'
 
@@ -61,7 +61,7 @@ const ResumeView = () => {
 
   const handleDownloadPDF = async () => {
     try {
-      const response = await resumeAPI.generatePDF(id)
+      const response = await pdfAPI.generatePDF(id)
       const blob = new Blob([response.data], { type: 'application/pdf' })
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')

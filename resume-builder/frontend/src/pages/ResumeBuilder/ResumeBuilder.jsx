@@ -13,6 +13,7 @@ import {
 } from '../../components/ResumeBuilder'
 import { resumeAPI } from '../../services/api'
 import { useAuthStore } from '../../stores/authStore'
+import toast from 'react-hot-toast'
 import templates from '../../components/Templates/index'
 
 const ResumeBuilder = () => {
@@ -648,6 +649,14 @@ const ResumeBuilder = () => {
                 <ResumePreview 
                   data={resumeData}
                   template={resumeData.template}
+                  resumeId={id}
+                  onFullView={() => {
+                    if (id && id !== 'new') {
+                      window.open(`/resumes/${id}`, '_blank')
+                    } else {
+                      toast.error('Please save your resume first to view it in full screen')
+                    }
+                  }}
                 />
               </div>
             </div>
