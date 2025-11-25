@@ -149,11 +149,22 @@ const ResumeBuilder = () => {
     setIsLoading(true)
     try {
       const response = await resumeAPI.getResumeById(id)
-      setResumeData(response.data)
+      
+      // Check if response has the expected structure
+      const resumeData = response.data?.data?.resume || response.data
+      
+      if (!resumeData) {
+        throw new Error('Invalid response structure')
+      }
+      
+      setResumeData(resumeData)
       setLastSaved(new Date())
     } catch (error) {
       console.error('Error loading resume:', error)
-      // Handle error (maybe show notification)
+      console.error('Response structure:', response?.data)
+      // Handle error (maybe show notification or redirect)
+      alert('Failed to load resume data. Please try again.')
+      navigate('/resumes')
     } finally {
       setIsLoading(false)
     }
@@ -386,14 +397,30 @@ const ResumeBuilder = () => {
   }
 
   const getCompletionPercentage = () => {
+    if (!resumeData) return 0
+    
     let completed = 0
     const total = 6 // Total sections
 
-    if (resumeData.personalInfo.fullName && resumeData.personalInfo.email) completed++
-    if (resumeData.experience.length > 0) completed++
-    if (resumeData.education.length > 0) completed++
-    if (resumeData.skills.technical.length > 0 || resumeData.skills.soft.length > 0) completed++
-    if (resumeData.projects.length > 0) completed++
+    // Check personal info section
+    if (resumeData.personalInfo?.fullName && resumeData.personalInfo?.email) completed++
+    
+    // Check experience section
+    if (resumeData.experience && resumeData.experience.length > 0) completed++
+    
+    // Check education section
+    if (resumeData.education && resumeData.education.length > 0) completed++
+    
+    // Check skills section
+    if (resumeData.skills && (
+      (resumeData.skills.technical && resumeData.skills.technical.length > 0) || 
+      (resumeData.skills.soft && resumeData.skills.soft.length > 0)
+    )) completed++
+    
+    // Check projects section
+    if (resumeData.projects && resumeData.projects.length > 0) completed++
+    
+    // Check template and settings
     if (resumeData.template && resumeData.settings) completed++
 
     return Math.round((completed / total) * 100)
