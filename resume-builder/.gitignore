@@ -62,7 +62,9 @@ dist
 # Gatsby files
 .cache/
 # Only ignore public directories in specific locations, not all directories named public
-frontend/public/
+frontend/public/*
+!frontend/public/favicon.ico
+!frontend/public/favicon.png
 backend/public/
 
 # Vuepress build output
