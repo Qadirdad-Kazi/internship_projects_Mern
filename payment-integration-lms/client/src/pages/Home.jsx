@@ -2,9 +2,30 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const courses = [
-    { id: 1, title: 'Advanced React Patterns', price: '49.99', description: 'Master React with advanced patterns and techniques.', level: 'Advanced' },
-    { id: 2, title: 'Node.js Microservices', price: '59.99', description: 'Build scalable microservices with Node.js and Docker.', level: 'Expert' },
-    { id: 3, title: 'Full Stack MERN Bootcamp', price: '99.99', description: 'Become a full stack developer from scratch.', level: 'Beginner' },
+    {
+        id: 1,
+        title: 'Advanced React Patterns',
+        price: '49.99',
+        description: 'Master React with advanced patterns and techniques.',
+        level: 'Advanced',
+        image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+    },
+    {
+        id: 2,
+        title: 'Node.js Microservices',
+        price: '59.99',
+        description: 'Build scalable microservices with Node.js and Docker.',
+        level: 'Expert',
+        image: 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+    },
+    {
+        id: 3,
+        title: 'Full Stack MERN Bootcamp',
+        price: '99.99',
+        description: 'Become a full stack developer from scratch.',
+        level: 'Beginner',
+        image: 'https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+    },
 ];
 
 const Home = () => {
@@ -89,20 +110,31 @@ const Home = () => {
 
                 <div className="grid">
                     {courses.map(course => (
-                        <div key={course.id} className="card">
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                                <span className="badge">{course.level}</span>
-                                <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-main)' }}>${course.price}</span>
+                        <div key={course.id} className="card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ height: '200px', overflow: 'hidden' }}>
+                                <img
+                                    src={course.image}
+                                    alt={course.title}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }}
+                                    onMouseOver={(e) => e.target.style.transform = 'scale(1.1)'}
+                                    onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                                />
                             </div>
-                            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{course.title}</h2>
-                            <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', lineHeight: '1.6' }}>{course.description}</p>
-                            <button
-                                className="btn-primary"
-                                style={{ width: '100%' }}
-                                onClick={() => navigate(`/checkout/${course.id}`, { state: { course } })}
-                            >
-                                Enroll Now
-                            </button>
+                            <div style={{ padding: '2rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                                    <span className="badge">{course.level}</span>
+                                    <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-main)' }}>${course.price}</span>
+                                </div>
+                                <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{course.title}</h2>
+                                <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', lineHeight: '1.6', flex: 1 }}>{course.description}</p>
+                                <button
+                                    className="btn-primary"
+                                    style={{ width: '100%' }}
+                                    onClick={() => navigate(`/checkout/${course.id}`, { state: { course } })}
+                                >
+                                    Enroll Now
+                                </button>
+                            </div>
                         </div>
                     ))}
                 </div>
