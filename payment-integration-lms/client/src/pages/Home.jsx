@@ -11,78 +11,101 @@ const Home = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="container">
-            {/* Hero Section */}
+        <div>
+            {/* Hero Section - Full Width */}
             <section style={{
+                position: 'relative',
+                height: '80vh',
+                minHeight: '500px',
+                width: '100%',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '5rem',
-                padding: '2rem 0',
-                gap: '2rem',
-                flexWrap: 'wrap'
+                justifyContent: 'center',
+                overflow: 'hidden',
+                marginBottom: '4rem'
             }}>
-                <div style={{ flex: '1', minWidth: '300px' }}>
+                {/* Background Image with Blur */}
+                <div style={{
+                    position: 'absolute',
+                    top: '-20px',
+                    left: '-20px',
+                    right: '-20px',
+                    bottom: '-20px',
+                    backgroundImage: 'url(https://images.unsplash.com/photo-1501504905252-473c47e087f8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    filter: 'blur(8px) brightness(0.4)',
+                    zIndex: -1
+                }}></div>
+
+                {/* Centered Content */}
+                <div style={{
+                    textAlign: 'center',
+                    padding: '2rem',
+                    maxWidth: '800px',
+                    zIndex: 1
+                }}>
                     <h1 style={{
-                        fontSize: '3.5rem',
+                        fontSize: '4rem',
                         marginBottom: '1.5rem',
-                        background: 'linear-gradient(to right, #3b82f6, #8b5cf6)',
+                        fontWeight: '800',
+                        textShadow: '0 4px 6px rgba(0,0,0,0.3)',
+                        background: 'linear-gradient(to bottom right, #ffffff, #94a3b8)',
                         WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        lineHeight: '1.1'
+                        WebkitTextFillColor: 'transparent'
                     }}>
                         Master New Skills <br /> with Premium Courses
                     </h1>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '1.25rem', marginBottom: '2rem', maxWidth: '500px' }}>
+                    <p style={{
+                        color: '#e2e8f0',
+                        fontSize: '1.5rem',
+                        marginBottom: '2.5rem',
+                        lineHeight: '1.6',
+                        textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+                    }}>
                         Unlock your potential with our expert-led courses. Learn from the best and advance your career today.
                     </p>
-                    <button className="btn-primary" style={{ fontSize: '1.1rem', padding: '1rem 2rem' }} onClick={() => document.getElementById('courses').scrollIntoView({ behavior: 'smooth' })}>
+                    <button
+                        className="btn-primary"
+                        style={{
+                            fontSize: '1.25rem',
+                            padding: '1rem 3rem',
+                            boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)'
+                        }}
+                        onClick={() => document.getElementById('courses').scrollIntoView({ behavior: 'smooth' })}
+                    >
                         Explore Courses
                     </button>
                 </div>
-                <div style={{ flex: '1', minWidth: '300px', display: 'flex', justifyContent: 'center' }}>
-                    <img
-                        src="https://images.unsplash.com/photo-1501504905252-473c47e087f8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-                        alt="Education"
-                        style={{
-                            width: '100%',
-                            maxWidth: '500px',
-                            borderRadius: '1rem',
-                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-                            transform: 'perspective(1000px) rotateY(-5deg)',
-                            transition: 'transform 0.3s ease'
-                        }}
-                        onMouseOver={(e) => e.currentTarget.style.transform = 'perspective(1000px) rotateY(0deg) scale(1.02)'}
-                        onMouseOut={(e) => e.currentTarget.style.transform = 'perspective(1000px) rotateY(-5deg)'}
-                    />
-                </div>
             </section>
 
-            <header id="courses" style={{ marginBottom: '3rem', textAlign: 'center' }}>
-                <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
-                    Available Courses
-                </h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem' }}>Choose the perfect course for your goals.</p>
-            </header>
+            <div className="container">
+                <header id="courses" style={{ marginBottom: '3rem', textAlign: 'center' }}>
+                    <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
+                        Available Courses
+                    </h2>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem' }}>Choose the perfect course for your goals.</p>
+                </header>
 
-            <div className="grid">
-                {courses.map(course => (
-                    <div key={course.id} className="card">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                            <span className="badge">{course.level}</span>
-                            <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-main)' }}>${course.price}</span>
+                <div className="grid">
+                    {courses.map(course => (
+                        <div key={course.id} className="card">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                                <span className="badge">{course.level}</span>
+                                <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-main)' }}>${course.price}</span>
+                            </div>
+                            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{course.title}</h2>
+                            <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', lineHeight: '1.6' }}>{course.description}</p>
+                            <button
+                                className="btn-primary"
+                                style={{ width: '100%' }}
+                                onClick={() => navigate(`/checkout/${course.id}`, { state: { course } })}
+                            >
+                                Enroll Now
+                            </button>
                         </div>
-                        <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{course.title}</h2>
-                        <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', lineHeight: '1.6' }}>{course.description}</p>
-                        <button
-                            className="btn-primary"
-                            style={{ width: '100%' }}
-                            onClick={() => navigate(`/checkout/${course.id}`, { state: { course } })}
-                        >
-                            Enroll Now
-                        </button>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
         </div>
     );
