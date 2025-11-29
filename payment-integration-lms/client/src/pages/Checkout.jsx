@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import PayPalButton from '../components/PayPalButton';
+import PaymentMethods from '../components/PaymentMethods';
 
 const Checkout = () => {
     const { state } = useLocation();
@@ -57,8 +57,8 @@ const Checkout = () => {
                 <div>
                     <h2 style={{ marginBottom: '1.5rem' }}>Payment Details</h2>
                     <div className="card">
-                        <p style={{ marginBottom: '1.5rem', color: 'var(--text-muted)' }}>Complete your purchase securely with PayPal.</p>
-                        <PayPalButton course={course} onSuccess={handleSuccess} />
+                        <p style={{ marginBottom: '1.5rem', color: 'var(--text-muted)' }}>Select your preferred mobile wallet.</p>
+                        <PaymentMethods course={course} onSuccess={handleSuccess} />
                     </div>
                 </div>
             </div>
