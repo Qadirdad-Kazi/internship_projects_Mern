@@ -23,7 +23,9 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/collab_proj
     .catch(err => console.error('MongoDB Connection Error:', err));
 
 const taskRoutes = require('./routes/tasks');
+const milestoneRoutes = require('./routes/milestones');
 app.use('/api/tasks', taskRoutes);
+app.use('/api/milestones', milestoneRoutes);
 
 // Socket.IO Setup
 const io = new Server(server, {
@@ -44,6 +46,11 @@ io.on('connection', (socket) => {
     socket.on('task_updated', (data) => {
         // Broadcast to others in the same project
         socket.to(data.projectId).emit('task_updated', data);
+    });
+
+    socket.on('milestone_updated', (data) => {
+        // Broadcast milestone updates
+        socket.to(data.projectId).emit('milestone_updated', data);
     });
 
     socket.on('disconnect', () => {
