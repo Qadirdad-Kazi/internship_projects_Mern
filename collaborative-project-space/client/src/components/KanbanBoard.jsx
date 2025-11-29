@@ -3,6 +3,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { getTasks, updateTask, createTask } from '../services/api';
 import io from 'socket.io-client';
 import { Plus, MoreHorizontal } from 'lucide-react';
+import TaskModal from './TaskModal';
 import './KanbanBoard.css';
 
 const socket = io('http://localhost:5000');
@@ -14,6 +15,8 @@ const KanbanBoard = ({ projectId }) => {
         'in-progress': { id: 'in-progress', title: 'In Progress', taskIds: [] },
         'done': { id: 'done', title: 'Done', taskIds: [] },
     });
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedStatus, setSelectedStatus] = useState('todo');
 
     useEffect(() => {
         fetchTasks();
@@ -108,16 +111,16 @@ const KanbanBoard = ({ projectId }) => {
         }
     };
 
-    const handleCreateTask = async (status) => {
-        const title = prompt("Enter task title:");
-        if (!title) return;
+    const handleOpenModal = (status) => {
+        setSelectedStatus(status);
+        setIsModalOpen(true);
+    };
 
+    const handleCreateTask = async (taskData) => {
         try {
             const newTask = await createTask({
-                title,
-                status,
+                ...taskData,
                 projectId,
-                priority: 'medium'
             });
             socket.emit('task_updated', { projectId, taskId: newTask._id });
             fetchTasks(); // Refresh
@@ -128,6 +131,13 @@ const KanbanBoard = ({ projectId }) => {
 
     return (
         <div className="kanban-board">
+            <TaskModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSubmit={handleCreateTask}
+                initialStatus={selectedStatus}
+            />
+
             <DragDropContext onDragEnd={onDragEnd}>
                 {Object.values(columns).map((column) => {
                     const columnTasks = column.taskIds.map(taskId => tasks.find(t => t._id === taskId)).filter(Boolean);
@@ -156,6 +166,7 @@ const KanbanBoard = ({ projectId }) => {
                                                     >
                                                         <div className="task-content">
                                                             <h4>{task.title}</h4>
+                                                            {task.description && <p className="task-description">{task.description}</p>}
                                                             {task.priority && <span className={`priority ${task.priority}`}>{task.priority}</span>}
                                                         </div>
                                                     </div>
@@ -166,7 +177,7 @@ const KanbanBoard = ({ projectId }) => {
                                     </div>
                                 )}
                             </Droppable>
-                            <button className="add-task-btn" onClick={() => handleCreateTask(column.id)}>
+                            <button className="add-task-btn" onClick={() => handleOpenModal(column.id)}>
                                 <Plus size={16} /> Add Task
                             </button>
                         </div>

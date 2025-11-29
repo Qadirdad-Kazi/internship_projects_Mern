@@ -83,6 +83,13 @@
     color: var(--text-color);
 }
 
+.task-description {
+    margin: 0 0 8px 0;
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
 .priority {
     display: inline-block;
     padding: 2px 6px;
