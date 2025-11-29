@@ -6,7 +6,10 @@ A real-time project collaboration platform for interns to work together seamless
 
 ✅ **Kanban-style Project Board** - Drag-and-drop task management  
 ✅ **Real-time Synchronization** - Live updates using Socket.IO  
-✅ **Task Management** - Create, update, and delete tasks  
+✅ **Task Management** - Create, update, and delete tasks with:
+  - Task title and description
+  - Priority levels (Low, Medium, High) with color-coded badges
+  - Status tracking (To Do, In Progress, Done)
 ✅ **Project Milestones** - Track progress effectively  
 ✅ **Collaborative Environment** - Multiple users can work simultaneously
 
