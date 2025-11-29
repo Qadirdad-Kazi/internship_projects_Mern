@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { getTasks, updateTask, createTask } from '../services/api';
+import { getTasks, updateTask, createTask, deleteTask } from '../services/api';
 import io from 'socket.io-client';
-import { Plus, MoreHorizontal } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import TaskModal from './TaskModal';
 import './KanbanBoard.css';
 
@@ -129,6 +129,18 @@ const KanbanBoard = ({ projectId }) => {
         }
     };
 
+    const handleDeleteTask = async (taskId, taskTitle) => {
+        if (window.confirm(`Are you sure you want to delete "${taskTitle}"?`)) {
+            try {
+                await deleteTask(taskId);
+                socket.emit('task_updated', { projectId, taskId });
+                fetchTasks(); // Refresh
+            } catch (error) {
+                console.error("Error deleting task", error);
+            }
+        }
+    };
+
     return (
         <div className="kanban-board">
             <TaskModal
@@ -165,7 +177,20 @@ const KanbanBoard = ({ projectId }) => {
                                                         {...provided.dragHandleProps}
                                                     >
                                                         <div className="task-content">
-                                                            <h4>{task.title}</h4>
+                                                            <div className="task-header">
+                                                                <h4>{task.title}</h4>
+                                                                <button
+                                                                    className="delete-task-btn"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleDeleteTask(task._id, task.title);
+                                                                    }}
+                                                                    onMouseDown={(e) => e.stopPropagation()}
+                                                                    title="Delete task"
+                                                                >
+                                                                    <Trash2 size={14} />
+                                                                </button>
+                                                            </div>
                                                             {task.description && <p className="task-description">{task.description}</p>}
                                                             {task.priority && <span className={`priority ${task.priority}`}>{task.priority}</span>}
                                                         </div>
