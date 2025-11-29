@@ -1,0 +1,127 @@
+.kanban-board {
+    display: flex;
+    gap: 24px;
+    padding: 32px;
+    height: 100vh;
+    overflow-x: auto;
+    background-color: var(--bg-color);
+}
+
+.column {
+    background-color: var(--column-bg);
+    border-radius: 12px;
+    width: 320px;
+    min-width: 320px;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    height: fit-content;
+    max-height: 100%;
+}
+
+.column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 0 4px;
+}
+
+.column-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.count {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 100px;
+    transition: background-color 0.2s ease;
+}
+
+.task-list.dragging-over {
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 8px;
+}
+
+.task-card {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    cursor: grab;
+    border: 1px solid transparent;
+}
+
+.task-card:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.task-card.dragging {
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+    border-color: var(--primary-color);
+    transform: rotate(2deg);
+}
+
+.task-content h4 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.priority {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.priority.low {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.priority.medium {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.priority.high {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.add-task-btn {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+    width: 100%;
+}
+
+.add-task-btn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: var(--text-color);
+}
